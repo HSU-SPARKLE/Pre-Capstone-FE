@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
+import Button from 'react-bootstrap/Button'; // Button 컴포넌트 import
+import './App.css'; // CSS 파일 import
 
 
 function SendMessage() {
@@ -79,28 +81,24 @@ function SendMessage() {
 
   return (
     <div>
-      <Navbar bg="white" data-bs-theme="light">
-        <Container>
-          <Navbar.Brand href="#home">Navbar</Navbar.Brand>
-          <Nav className="me-auto">
-            <Nav.Link href="#home">Home</Nav.Link>
-            <Nav.Link href="#features">Features</Nav.Link>
-            <Nav.Link href="#pricing">Pricing</Nav.Link>
+      <Navbar className="custom-navbar">
+        <Container fluid> {/* fluid로 변경 */}
+          <Navbar.Brand className='custom-text-black' href="/">SPARKLE</Navbar.Brand>
+          <Nav className="me-auto"> {/* me-auto 제거 */}
+            <Link to="/send-message">
+              <Button className="custom-button nav-link-spacing">문자 보내기</Button>
+            </Link>
+            <Link to="/message-history">
+              <Button className="custom-button nav-link-spacing">문자 내역 보기</Button>
+            </Link>
+            <Link to="#pricing">
+              <Button className="custom-button nav-link-spacing">주소록 관리</Button>
+            </Link>
           </Nav>
         </Container>
       </Navbar>
 
       <br />
-      <Navbar bg="light" data-bs-theme="light">
-        <Container>
-          <Navbar.Brand href="#home">Navbar</Navbar.Brand>
-          <Nav className="me-auto">
-            <Nav.Link href="#home">Home</Nav.Link>
-            <Nav.Link href="#features">Features</Nav.Link>
-            <Nav.Link href="#pricing">Pricing</Nav.Link>
-          </Nav>
-        </Container>
-      </Navbar>
 
 
         {/* 전화번호부 파일 업로드 */}

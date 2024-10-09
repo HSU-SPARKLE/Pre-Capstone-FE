@@ -28,6 +28,45 @@
   color: #61dafb;
 }
 
+/* Navbar 커스텀 색상 */
+.custom-navbar {
+  background-color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* 아래쪽 그림자 */
+}
+
+.custom-nav {
+  display: flex; /* flexbox 사용 */
+  justify-content: flex-start; /* 왼쪽 정렬 */
+  align-items: center; /* 수직 정렬 */
+  margin-left: 0; /* 왼쪽 마진을 없앰 */
+  
+}
+
+.custom-text-black {
+  color: black !important; 
+  font-size: 1.5rem !important; 
+  font-weight: bold !important; 
+  margin-left: 10px !important;
+  margin-right: 20px !important;
+}
+
+.nav-link-spacing {
+  margin-left: 50px !important; /* 원하는 간격으로 조정 */
+}
+
+.custom-button {
+  background-color: white !important; 
+  color: #1958F5 !important; 
+  border-width: 1px !important;
+  font-size: 1rem !important; 
+  width: 170px !important;
+}
+
+.custom-button:hover {
+  background-color: #1958F5 !important; 
+  color: white !important; 
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
