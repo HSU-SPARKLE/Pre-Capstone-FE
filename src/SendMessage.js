@@ -231,7 +231,6 @@ const modalStyle = {
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.5)', // 반투명 배경
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -242,8 +241,8 @@ const modalContentStyle = {
   background: 'white',
   padding: '20px',
   borderRadius: '8px',
-  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-  width: '80%', // 너비 조정
+  boxShadow: '0 2px 10px rgba(0, 0, 0, 0)',
+  width: '70%', // 너비 조정
 };
 
 export default SendMessage;

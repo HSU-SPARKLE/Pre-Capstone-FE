@@ -7,6 +7,7 @@ import AIChatBot from './AIChatBot';
 import MessageHistory from './MessageHistory';
 import MyPage from './MyPage';
 import CreateImage from './CreateImage';
+import AddressBookManage from './AddressBookManage';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/message-history" element={<MessageHistory />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/create-image" element={<CreateImage />} />
+        <Route path="/address-book-manage" element={<AddressBookManage />} />
       </Routes>
     </Router>
   );
