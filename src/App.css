@@ -108,12 +108,12 @@
 }
 
 .custom-login-button {
-  background-color: #1958F5 !important; /* 배경을 투명하게 설정 */
+  background-color: #1958F5 !important;
   color: white !important; 
   border: 0px solid #1958F5 !important;
-  border-radius: 5% !important; /* 완전한 둥근 버튼 */
+  border-radius: 5px !important;
   font-size: 1.5rem !important; /* 폰트 크기 조정 */
-  width: 250px !important; /* 너비 조정 */
+  width: 100% !important; /* 너비 조정 */
   height: 50px !important; /* 높이 조정 */
   margin-top: 10px;
   display: flex; /* 중앙 정렬을 위한 flex 설정 */

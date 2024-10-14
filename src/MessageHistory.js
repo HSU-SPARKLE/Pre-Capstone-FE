@@ -1,67 +1,86 @@
 import React, { useState } from 'react';
-import './ImageGenerator.css';
+import { Link } from 'react-router-dom';
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
+import Button from 'react-bootstrap/Button'; // Button 컴포넌트 import
+import './App.css'; // CSS 파일 import
+import axios from 'axios';
 
-const MessageHistory = () => {
-  const [text, setText] = useState('');
-  const [keyword, setKeyword] = useState('');
+
+function MessageHistory() {
+  const [query, setQuery] = useState('');
   const [images, setImages] = useState([]);
 
-  const handleTextChange = (e) => {
-    setText(e.target.value);
+  const fetchImages = async () => {
+    const ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
+    try {
+        const response = await axios.get(`https://api.unsplash.com/search/photos`, {
+            params: { query: query },
+            headers: {
+                Authorization: `Client-ID ${ACCESS_KEY}`,
+            },
+        });
+        setImages(response.data.results);
+    } catch (error) {
+        console.error('Error fetching images', error);
+    }
   };
 
-  const handleKeywordChange = (e) => {
-    setKeyword(e.target.value);
-  };
-
-  const generateImage = async () => {
-    // 서버로부터 이미지를 가져오는 API 호출 예시 (API 엔드포인트는 수정 필요)
-    const response = await fetch('http://localhost:5000/generate-image', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text, keyword }),
-    });
-
-    const data = await response.json();
-    setImages(data.images);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    fetchImages();
   };
 
   return (
-    <div className="container">
-      <h2>Image Generator</h2>
-      <div className="form-group">
-        <label>발송 목적 및 내용</label>
-        <textarea
-          value={text}
-          onChange={handleTextChange}
-          placeholder="내용을 입력하세요."
-          maxLength="2000"
-          rows="4"
-        ></textarea>
-      </div>
-      <div className="form-group">
-        <label>키워드 (선택)</label>
-        <input
-          type="text"
-          value={keyword}
-          onChange={handleKeywordChange}
-          placeholder="예: 50% 할인, 휴가"
-        />
-      </div>
-      <button onClick={generateImage}>이미지 생성하기</button>
+    
+    <div>
+      <Navbar className="custom-navbar">
+        <Container fluid> {/* fluid로 변경 */}
+          <Navbar.Brand className='custom-text-black' href="/">SPARKLE</Navbar.Brand>
+          <Nav className="me-auto"> {/* me-auto 제거 */}
+            <Link to="/send-message">
+              <Button className="custom-button nav-link-spacing">문자 보내기</Button>
+            </Link>
+            <Link to="/message-history">
+              <Button className="custom-button nav-link-spacing">문자 내역 보기</Button>
+            </Link>
+            <Link to="/address-book-manage">
+              <Button className="custom-button nav-link-spacing">주소록 관리</Button>
+            </Link>
+          </Nav>
+        </Container>
+      </Navbar>
 
-      <div className="image-result">
-        <h3>이미지 생성 결과</h3>
-        <div className="image-gallery">
-          {images.map((image, index) => (
-            <img key={index} src={image.url} alt={Generated ${index + 1}} />
-          ))}
-        </div>
-      </div>
+      <h1>Unsplash 이미지 검색기</h1>
+            <form onSubmit={handleSubmit}>
+                <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="검색할 텍스트를 입력하세요"
+                />
+                <button type="submit">검색</button>
+            </form>
+            <div className="image-gallery">
+                {images.map((image) => (
+                    <img key={image.id} src={image.urls.small} alt={image.alt_description} />
+                ))}
+            </div>
+            <style jsx>{`
+                .image-gallery {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+                img {
+                    width: auto;
+                    height: auto;
+                }
+            `}</style>
+
     </div>
   );
-};
+}
 
-export default ImageGenerator;
+export default MessageHistory;
