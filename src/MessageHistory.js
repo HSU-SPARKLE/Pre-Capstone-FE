@@ -63,5 +63,12 @@ const MessageHistory = () => {
       </div>
     </div>
   );
+<<<<<<< Updated upstream
 };
+=======
+}
+
+
+
+>>>>>>> Stashed changes
 export default MessageHistory;
