@@ -56,12 +56,12 @@ const MessageHistory = () => {
         <h3>이미지 생성 결과</h3>
         <div className="image-gallery">
           {images.map((image, index) => (
-            <img key={index} src={image.url} alt={Generated ${index + 1}} />
+            <img key={index} src={image.url} alt={`Generated ${index + 1}`} />
+
           ))}
         </div>
       </div>
     </div>
   );
 };
-
-export default ImageGenerator;
+export default MessageHistory;
