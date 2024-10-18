@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button'; // Button 컴포넌트 import
 import Modal from 'react-modal'; // Modal 컴포넌트 import
+import { Link, useNavigate } from 'react-router-dom'; // useNavigate 추가
 import './App.css'; // CSS 파일 import
 
 
 function SendMessage() {
+  const navigate = useNavigate(); // useNavigate 훅 사용
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [username, setUsername] = useState('');
@@ -70,7 +71,8 @@ function SendMessage() {
   // 이미지 클릭 시 실행될 함수
 const handleImageClick = (image) => {
   console.log('클릭된 이미지:', image.alt);
-  // 원하는 동작을 추가할 수 있습니다.
+
+  navigate('/image-template'); // 원하는 경로로 변경
 };
 
 

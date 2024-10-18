@@ -8,6 +8,7 @@ import MessageHistory from './MessageHistory';
 import MyPage from './MyPage';
 import CreateImage from './CreateImage';
 import AddressBookManage from './AddressBookManage';
+import ImageTemplate from './ImageTemplate';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/create-image" element={<CreateImage />} />
         <Route path="/address-book-manage" element={<AddressBookManage />} />
+        <Route path="/image-template" element={<ImageTemplate />} />
       </Routes>
     </Router>
   );
