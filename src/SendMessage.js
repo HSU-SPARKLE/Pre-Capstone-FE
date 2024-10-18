@@ -7,15 +7,12 @@ import Button from 'react-bootstrap/Button'; // Button 컴포넌트 import
 import Modal from 'react-modal'; // Modal 컴포넌트 import
 import './App.css'; // CSS 파일 import
 
-Modal.setAppElement('#root'); // 접근성 설정 (root ID를 가진 요소를 지정)
-
 
 function SendMessage() {
   const [contacts, setContacts] = useState(['']); // 연락처 배열
   const [kakaoIds, setKakaoIds] = useState(['']); // 카카오톡 ID 배열
   const [category, setCategory] = useState(''); // 카테고리 상태
   const [message, setMessage] = useState(''); // 메시지 상태
-  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열림 상태
   const [imageFile, setImageFile] = useState(null); // 업로드된 이미지 파일
   const [imageTitle, setImageTitle] = useState(''); // 이미지 제목
   const [seedsNeeded, setSeedsNeeded] = useState(10); // 문자 송신에 필요한 씨앗
@@ -33,23 +30,6 @@ function SendMessage() {
     console.log('비밀번호:', password);
     closeModal();
   };
-
-  const [content, setContent] = useState('');
-  const [keywords, setKeywords] = useState('');
-
-  const handleContentChange = (e) => {
-    setContent(e.target.value);
-  };
-
-  const handleKeywordsChange = (e) => {
-    setKeywords(e.target.value);
-  };
-
-  const handleGenerateImage = () => {
-    alert('이미지 생성하기 버튼이 클릭되었습니다.');
-    // 이미지 생성 로직을 여기에 추가
-  };
-
 
   // 연락처 입력 필드 처리
   const handleContactChange = (index, value) => {
@@ -80,13 +60,8 @@ function SendMessage() {
   };
 
   const handleSendMessage = () => {
-    console.log('연락처:', contacts);
-    console.log('카카오톡 ID:', kakaoIds);
-    console.log('카테고리:', category);
-    console.log('메시지:', message);
-    setIsModalOpen(true); // 모달 열기
-  };
 
+  };
 
 
   const applyImage = () => {
@@ -120,7 +95,7 @@ function SendMessage() {
             <Link to="/message-history">
               <Button className="custom-button nav-link-spacing">문자 내역 보기</Button>
             </Link>
-            <Link to="#pricing">
+            <Link to="/address-book-manage">
               <Button className="custom-button nav-link-spacing">주소록 관리</Button>
             </Link>
           </Nav>
@@ -129,46 +104,111 @@ function SendMessage() {
 
       <br />
 
-      <div style={styles.container}>
-      <p style={styles.instructions}>
-        • 뿌리오 AI 기능을 통해 메시지를 입력하시면 총 3장의 AI 광고 이미지가 생성됩니다.<br />
-        • 이미지 재생성 버튼을 통해 새로운 이미지 생성이 가능합니다.<br />
-        • 생성된 이미지를 선택하여 템플릿 기능을 통해 자유롭게 디자인 수정이 가능합니다.
-      </p>
-      <div style={styles.textareaContainer}>
-        <label htmlFor="content" style={styles.label}>발송 목적 및 내용</label>
-        <textarea
-          id="content"
-          value={content}
-          onChange={handleContentChange}
-          placeholder="ex: 한성대 피자집 가게에서 방문 포장 시 50% 할인을 진행합니다. 위 광고 문구를 결제 시 직원분께 보여주시면 됩니다. 일부 품목에 한해서 할인이 제한될 수 있습니다. 감사합니다."
-          maxLength={2000}
-          style={styles.textarea}
-        />
-        <div style={styles.byteCount}>{content.length}/2000 byte</div>
-      </div>
-      <div style={styles.inputContainer}>
-        <label htmlFor="keywords" style={styles.label}>키워드 (선택)</label>
-        <input
-          id="keywords"
-          value={keywords}
-          onChange={handleKeywordsChange}
-          placeholder="ex: 50% 할인, 피자"
-          style={styles.input}
-        />
-      </div>
-      <button onClick={handleGenerateImage} style={styles.button}>
-        이미지 생성하기
-      </button>
-    </div>
 
-          {/* 플로팅 버튼: 화면 상단으로 이동 */}
-          <button className="custom-floating-button floating-button" onClick={openModal}>
+        {/* 전화번호부 파일 업로드 */}
+        <div>
+        <label>전화번호부 파일 업로드 (엑셀 파일 등): </label>
+        <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+        </div>
+
+        {/* 여러 전화번호 입력 필드 */}
+        <div>
+        {contacts.map((contact, index) => (
+            <div key={index}>
+            <input
+                type="text"
+                placeholder="전화번호 입력"
+                value={contact}
+                onChange={(e) => handleContactChange(index, e.target.value)}
+            />
+            </div>
+        ))}
+        <button onClick={handleAddContact}>연락처 추가</button>
+        </div>
+
+        {/* 여러 카카오톡 ID 입력 필드 */}
+        <div>
+        {kakaoIds.map((kakaoId, index) => (
+            <div key={index}>
+            <input
+                type="text"
+                placeholder="카카오톡 ID 입력"
+                value={kakaoId}
+                onChange={(e) => handleKakaoIdChange(index, e.target.value)}
+            />
+            </div>
+        ))}
+        <button onClick={handleAddKakaoId}>카카오톡 ID 추가</button>
+        </div>
+
+        {/* 카테고리 설정 */}
+        <div>
+        <p>문자를 보내는 곳의 카테고리를 선택하세요:</p>
+        <label>
+            <input
+            type="radio"
+            value="식당"
+            checked={category === '식당'}
+            onChange={(e) => setCategory(e.target.value)}
+            />
+            식당
+        </label>
+        <label>
+            <input
+            type="radio"
+            value="옷가게"
+            checked={category === '옷가게'}
+            onChange={(e) => setCategory(e.target.value)}
+            />
+            옷가게
+        </label>
+        <label>
+            <input
+            type="radio"
+            value="마트"
+            checked={category === '마트'}
+            onChange={(e) => setCategory(e.target.value)}
+            />
+            마트
+        </label>
+        </div>
+
+        {/* 메시지 입력 필드 */}
+        <div>
+        <textarea
+            placeholder="보낼 메시지 입력"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+        />
+        </div>
+
+        {/* 이미지 생성 버튼 */}
+        <button onClick={handleSendMessage}>이미지 생성</button>
+
+        {/* 씨앗 정보 표시 */}
+        <div style={{ marginTop: '10px' }}>
+            <p>문자 송신에 필요한 씨앗: {seedsNeeded}개</p>
+            <p>현재 보유한 씨앗: {userSeeds}개</p>
+        </div>
+
+        {/* 문자 보내기 버튼 */}
+        <button onClick={sendMessage}>문자 보내기</button>
+
+        <Link to="/">
+        <button>홈 화면으로 이동</button>
+        </Link>
+
+
+
+
+      {/* 플로팅 버튼: 화면 상단으로 이동 */}
+      <button className="custom-floating-button floating-button" onClick={openModal}>
         {'<<'}
       </button>
 
-          {/* 로그인 모달 */}
-          <Modal 
+
+        {/* 로그인 모달 */}
+      <Modal 
         isOpen={modalIsOpen} 
         onRequestClose={closeModal} 
         className="custom-modal" // 애니메이션 클래스 추가
@@ -197,11 +237,9 @@ function SendMessage() {
           로그인
         </button>
       </Modal>
-
     </div>
   );
 }
-
 
 // 모달 스타일
 const modalStyle = {
@@ -228,61 +266,6 @@ const modalContentStyle = {
   borderRadius: '8px',
   boxShadow: '0 2px 10px rgba(0, 0, 0, 0)',
   width: '70%', // 너비 조정
-};
-
-const styles = {
-  container: {
-    fontFamily: 'Arial, sans-serif',
-    padding: '20px',
-    maxWidth: '500px',
-    margin: '0 auto'
-  },
-  instructions: {
-    fontSize: '14px',
-    marginBottom: '20px',
-    color: '#333'
-  },
-  textareaContainer: {
-    marginBottom: '20px'
-  },
-  label: {
-    display: 'block',
-    fontSize: '14px',
-    marginBottom: '5px'
-  },
-  textarea: {
-    width: '100%',
-    height: '100px',
-    padding: '10px',
-    fontSize: '14px',
-    borderRadius: '4px',
-    border: '1px solid #ccc'
-  },
-  byteCount: {
-    textAlign: 'right',
-    fontSize: '12px',
-    color: '#666'
-  },
-  inputContainer: {
-    marginBottom: '20px'
-  },
-  input: {
-    width: '100%',
-    padding: '10px',
-    fontSize: '14px',
-    borderRadius: '4px',
-    border: '1px solid #ccc'
-  },
-  button: {
-    width: '100%',
-    padding: '10px',
-    fontSize: '16px',
-    color: '#fff',
-    backgroundColor: '#007BFF',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer'
-  }
 };
 
 export default SendMessage;
