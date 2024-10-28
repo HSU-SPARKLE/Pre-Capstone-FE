@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
@@ -7,12 +8,20 @@ import Modal from 'react-modal';
 import { Link, useNavigate } from 'react-router-dom';
 import './App.css';
 
+// Unsplash API 키를 넣어주세요.
+const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
+
 function ImageTemplate() {
   const navigate = useNavigate();
-
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [activePage, setActivePage] = useState('로고');
+  const [senderNumber, setSenderNumber] = useState('');
+  const [address, setAddress] = useState('');
+  const [message, setMessage] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [images, setImages] = useState([]);
 
   const openModal = () => setModalIsOpen(true);
   const closeModal = () => setModalIsOpen(false);
@@ -23,11 +32,6 @@ function ImageTemplate() {
     closeModal();
   };
 
-  const [activePage, setActivePage] = useState('로고');
-  const [senderNumber, setSenderNumber] = useState('');
-  const [address, setAddress] = useState('');
-  const [message, setMessage] = useState('');
-
   const handleSenderNumberChange = (e) => setSenderNumber(e.target.value);
   const handleAddressChange = (e) => setAddress(e.target.value);
   const handleMessageChange = (e) => setMessage(e.target.value);
@@ -36,7 +40,23 @@ function ImageTemplate() {
     console.log("발신 번호:", senderNumber);
     console.log("주소:", address);
     console.log("메시지:", message);
-    navigate('/finish-send-message'); // 원하는 경로로 변경
+    navigate('/finish-send-message');
+  };
+
+  const handleSearch = async () => {
+    if (searchKeyword) {
+      try {
+        const response = await axios.get(`https://api.unsplash.com/search/photos`, {
+          params: {
+            query: searchKeyword,
+            client_id: UNSPLASH_ACCESS_KEY,
+          },
+        });
+        setImages(response.data.results);
+      } catch (error) {
+        console.error("이미지 가져오기 오류:", error);
+      }
+    }
   };
 
   const renderContent = () => {
@@ -48,7 +68,28 @@ function ImageTemplate() {
       case '텍스트':
         return <div><h2>텍스트 입력 화면입니다.</h2></div>;
       case '이미지':
-        return <div><h2>이미지 삽입 화면입니다.</h2></div>;
+        return (
+          <div>
+            <h2>이미지 삽입 화면입니다.</h2>
+            <input 
+              type="text" 
+              value={searchKeyword} 
+              onChange={(e) => setSearchKeyword(e.target.value)} 
+              placeholder="검색 키워드 입력"
+            />
+            <button onClick={handleSearch}>검색</button>
+            <div style={styles.imageGallery}>
+              {images.map((image) => (
+                <img 
+                  key={image.id} 
+                  src={image.urls.small} 
+                  alt={image.alt_description} 
+                  style={styles.image} 
+                />
+              ))}
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -74,18 +115,14 @@ function ImageTemplate() {
       </Navbar>
 
       <div style={styles.appContainer}>
-        {/* 왼쪽 영역: 사이드바 추가 */}
         <div style={styles.leftContainer}>
           <Sidebar setActivePage={setActivePage} />
         </div>
 
-        {/* renderContent를 왼쪽 영역 아래에 추가 */}
         <div style={styles.contentContainer}>
-          {renderContent()} {/* 남은 공간에 내용 표시 */}
+          {renderContent()}
         </div>
 
-
-        {/* 가운데 영역: 이미지 파일로 가득 채움 */}
         <div style={styles.centerContainer}>
           <img 
             src="https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg" 
@@ -94,7 +131,6 @@ function ImageTemplate() {
           />
         </div>
 
-        {/* 오른쪽 발신자 정보 입력 영역 */}
         <div style={styles.rightContainer}>
           <h3>발신자 번호 입력</h3>
           <input 
@@ -134,12 +170,10 @@ function ImageTemplate() {
         </div>
       </div>
 
-      {/* 플로팅 버튼: 화면 상단으로 이동 */}
       <button className="custom-floating-button floating-button" onClick={openModal}>
         {'<<'}
       </button>
 
-      {/* 로그인 모달 */}
       <Modal 
         isOpen={modalIsOpen} 
         onRequestClose={closeModal} 
@@ -175,10 +209,10 @@ function ImageTemplate() {
 // 사이드바 컴포넌트
 function Sidebar({ setActivePage }) {
   const buttons = [
-    { icon: '🏠', text: '로고' },
-    { icon: '📷', text: 'QR 코드' },
-    { icon: '✏️', text: '텍스트' },
-    { icon: '🖼️', text: '이미지' }
+    { icon: '', text: '로고' },
+    { icon: '', text: 'QR 코드' },
+    { icon: '', text: '텍스트' },
+    { icon: '', text: '이미지' }
   ];
 
   return (
@@ -218,8 +252,6 @@ const modalStyle = {
   },
 };
 
-
-
 const styles = {
   appContainer: {
     display: 'flex',
@@ -227,7 +259,7 @@ const styles = {
     padding: '20px',
   },
   leftContainer: {
-    width: '15%', // 왼쪽 영역의 너비 조정 (좁게)
+    width: '15%', // 왼쪽 영역의 너비 조정
     paddingRight: '10px',
     display: 'flex',
     flexDirection: 'column',
@@ -319,9 +351,16 @@ const styles = {
     cursor: 'pointer',
     fontSize: '18px',
   },
+  imageGallery: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  image: {
+    width: '30%', // 이미지의 너비를 설정 (원하는 크기로 조정 가능)
+    marginBottom: '10px',
+  },
 };
-
-
 
 
 export default ImageTemplate;
