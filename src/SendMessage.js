@@ -1,83 +1,95 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button'; // Button 컴포넌트 import
+import Modal from 'react-modal'; // Modal 컴포넌트 import
+import { Link, useNavigate } from 'react-router-dom'; // useNavigate 추가
 import './App.css'; // CSS 파일 import
 
 
 function SendMessage() {
-  const [contacts, setContacts] = useState(['']); // 연락처 배열
-  const [kakaoIds, setKakaoIds] = useState(['']); // 카카오톡 ID 배열
-  const [category, setCategory] = useState(''); // 카테고리 상태
-  const [message, setMessage] = useState(''); // 메시지 상태
-  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열림 상태
-  const [imageFile, setImageFile] = useState(null); // 업로드된 이미지 파일
-  const [imageTitle, setImageTitle] = useState(''); // 이미지 제목
-  const [seedsNeeded, setSeedsNeeded] = useState(10); // 문자 송신에 필요한 씨앗
-  const [userSeeds, setUserSeeds] = useState(15); // 현재 사용자가 보유한 씨앗
+  const navigate = useNavigate(); // useNavigate 훅 사용
 
-  // 연락처 입력 필드 처리
-  const handleContactChange = (index, value) => {
-    const newContacts = [...contacts];
-    newContacts[index] = value;
-    setContacts(newContacts);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const openModal = () => setModalIsOpen(true);
+  const closeModal = () => setModalIsOpen(false);
+
+  const handleLogin = () => {
+    console.log('아이디:', username);
+    console.log('비밀번호:', password);
+    closeModal();
   };
 
-  const handleAddContact = () => {
-    setContacts([...contacts, '']); // 새로운 연락처 추가
+  const [description, setDescription] = useState('');
+  const [keyword, setKeyword] = useState('');
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [category, setCategory] = useState('차분한 분위기');
+  const [season, setSeason] = useState('봄');
+  const [showRegenerateButton, setShowRegenerateButton] = useState(false); // 이미지 재생성 버튼 표시 여부
+
+  const handleDescriptionChange = (e) => {
+    setDescription(e.target.value);
   };
 
-  // 카카오톡 ID 입력 필드 처리
-  const handleKakaoIdChange = (index, value) => {
-    const newKakaoIds = [...kakaoIds];
-    newKakaoIds[index] = value;
-    setKakaoIds(newKakaoIds);
+  const handleKeywordChange = (e) => {
+    setKeyword(e.target.value);
   };
 
-  const handleAddKakaoId = () => {
-    setKakaoIds([...kakaoIds, '']); // 새로운 카카오톡 ID 추가
+  const handleCategoryChange = (e) => {
+    setCategory(e.target.value);
   };
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    console.log('업로드된 파일:', file);
-    setImageFile(file); // 이미지 파일 상태 업데이트
+  const handleSeasonChange = (e) => {
+    setSeason(e.target.value);
   };
 
-  const handleSendMessage = () => {
-    console.log('연락처:', contacts);
-    console.log('카카오톡 ID:', kakaoIds);
-    console.log('카테고리:', category);
-    console.log('메시지:', message);
-    setIsModalOpen(true); // 모달 열기
+  const handleImageGeneration = () => {
+    // AI 이미지 생성 기능 호출 예시
+    const newImages = [
+      { src: 'https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg', alt: 'Image 1' },
+      { src: 'https://img.animalplanet.co.kr/news/2023/07/26/700/yksc1o84507zi4691o1s.jpg', alt: 'Image 2' },
+      { src: 'https://i.namu.wiki/i/FTDAkOuqh6VP_iOGtJfHLHTf7jCIOhQ6LdU0Q_Y4TB3WvtIt1RBjKJfBVwAyUD6O0QVzdKlK5vXkGkMgexoPBBAirY-QAfJwb6BiqqbKOd4BmxPpM57OgjJxNa8CxJiAOsCOkVv7RIOhdA-8CYC8WA.webp', alt: 'Image 3' },
+    ];
+    setSelectedImages(newImages);
+    setShowRegenerateButton(true); // 이미지 생성 후 재생성 버튼 표시
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false); // 모달 닫기
-    setImageFile(null); // 파일 초기화
-    setImageTitle(''); // 제목 초기화
+  const handleImageRegeneration = () => {
+    // 이미지 재생성 로직을 추가합니다.
+    const regeneratedImages = [
+      { src: 'https://blog.kakaocdn.net/dn/bvd1NP/btsFoctUnjD/spbSoDckKZTJno66EaDdCk/img.png', alt: 'New Image 1' },
+      { src: 'https://m.candlemano.com/web/product/big/202208/3f87090a39761a6d5ad10d09ff953e60.jpg', alt: 'New Image 2' },
+      { src: 'https://image.made-in-china.com/202f0j00aLlRpTervWqA/Colorful-Duck-Series-Bath-Duck-Toy-Floating-Duck-Baby-Bath-Duck-Kid-Duck.webp', alt: 'New Image 3' },
+    ];
+    setSelectedImages(regeneratedImages);
   };
 
-  const applyImage = () => {
-    // 이미지 적용하기 로직 추가 필요
-    console.log('제목:', imageTitle);
-    console.log('업로드된 이미지:', imageFile);
-  };
+  // 이미지 클릭 시 실행될 함수
+const handleImageClick = (image) => {
+  console.log('클릭된 이미지:', image.alt);
 
-  const sendMessage = () => {
-    // 문자 보내기 로직 추가 필요
-    console.log('문자 송신!');
-    console.log('사용자 보유 씨앗:', userSeeds);
-    console.log('필요한 씨앗:', seedsNeeded);
-    if (userSeeds >= seedsNeeded) {
-      console.log('문자 송신 완료!');
-    } else {
-      console.log('씨앗이 부족합니다.');
-    }
-    closeModal(); // 모달 닫기
-  };
+  navigate('/image-template'); // 원하는 경로로 변경
+};
+
+
+// 상태 추가: 마우스가 올라간 이미지의 인덱스를 저장
+const [hoveredImageIndex, setHoveredImageIndex] = useState(null);
+
+// 이미지에 마우스가 올라갈 때 호출되는 함수
+const handleMouseEnter = (index) => {
+  setHoveredImageIndex(index);
+};
+
+// 이미지에서 마우스가 나갈 때 호출되는 함수
+const handleMouseLeave = () => {
+  setHoveredImageIndex(null);
+};
+  
+
 
   return (
     <div>
@@ -91,7 +103,7 @@ function SendMessage() {
             <Link to="/message-history">
               <Button className="custom-button nav-link-spacing">문자 내역 보기</Button>
             </Link>
-            <Link to="#pricing">
+            <Link to="/address-book-manage">
               <Button className="custom-button nav-link-spacing">주소록 관리</Button>
             </Link>
           </Nav>
@@ -101,140 +113,231 @@ function SendMessage() {
       <br />
 
 
-        {/* 전화번호부 파일 업로드 */}
+
+      <div style={styles.container}>
+      {/* 왼쪽 섹션 */}
+      <div style={styles.leftSection}>
+        {/* 사용자에게 설명을 제공하는 텍스트 */}
         <div>
-        <label>전화번호부 파일 업로드 (엑셀 파일 등): </label>
-        <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+          <p>뿌리오 AI 기능을 통해 메세지를 입력하시면 총 3장의 AI 광고 이미지가 생성됩니다.</p>
+          <p>이미지 재생성 버튼을 통해 새로운 이미지 생성이 가능합니다.</p>
+          <p>생성된 이미지를 선택하여 템플릿 기능을 통해 자유롭게 디자인 수정이 가능합니다.</p>
         </div>
 
-        {/* 여러 전화번호 입력 필드 */}
-        <div>
-        {contacts.map((contact, index) => (
-            <div key={index}>
-            <input
-                type="text"
-                placeholder="전화번호 입력"
-                value={contact}
-                onChange={(e) => handleContactChange(index, e.target.value)}
-            />
-            </div>
-        ))}
-        <button onClick={handleAddContact}>연락처 추가</button>
-        </div>
-
-        {/* 여러 카카오톡 ID 입력 필드 */}
-        <div>
-        {kakaoIds.map((kakaoId, index) => (
-            <div key={index}>
-            <input
-                type="text"
-                placeholder="카카오톡 ID 입력"
-                value={kakaoId}
-                onChange={(e) => handleKakaoIdChange(index, e.target.value)}
-            />
-            </div>
-        ))}
-        <button onClick={handleAddKakaoId}>카카오톡 ID 추가</button>
-        </div>
-
-        {/* 카테고리 설정 */}
-        <div>
-        <p>문자를 보내는 곳의 카테고리를 선택하세요:</p>
-        <label>
-            <input
-            type="radio"
-            value="식당"
-            checked={category === '식당'}
-            onChange={(e) => setCategory(e.target.value)}
-            />
-            식당
-        </label>
-        <label>
-            <input
-            type="radio"
-            value="옷가게"
-            checked={category === '옷가게'}
-            onChange={(e) => setCategory(e.target.value)}
-            />
-            옷가게
-        </label>
-        <label>
-            <input
-            type="radio"
-            value="마트"
-            checked={category === '마트'}
-            onChange={(e) => setCategory(e.target.value)}
-            />
-            마트
-        </label>
-        </div>
-
-        {/* 메시지 입력 필드 */}
-        <div>
+        <h2>발송 목적 및 내용</h2>
         <textarea
-            placeholder="보낼 메시지 입력"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+          style={styles.textArea}
+          value={description}
+          onChange={handleDescriptionChange}
+          placeholder="목적 및 내용을 입력하세요"
+          maxLength={2000}
         />
-        </div>
+        <div style={styles.charCount}>{description.length}/2000 byte</div>
 
-        {/* 이미지 생성 버튼 */}
-        <button onClick={handleSendMessage}>이미지 생성</button>
+        <div style={styles.keywordSection}>
+          <h2>키워드 선택</h2>
+          <div style={styles.dropdownContainer}>
+            <select value={category} onChange={handleCategoryChange} style={styles.select}>
+              <option value="차분한 분위기">차분한 분위기</option>
+              <option value="활기찬 분위기">활기찬 분위기</option>
+              <option value="따뜻한 느낌">따뜻한 느낌</option>
+            </select>
+            <select value={season} onChange={handleSeasonChange} style={styles.select}>
+              <option value="봄">봄</option>
+              <option value="여름">여름</option>
+              <option value="가을">가을</option>
+              <option value="겨울">겨울</option>
+            </select>
+          </div>
 
-        {/* 씨앗 정보 표시 */}
-        <div style={{ marginTop: '10px' }}>
-            <p>문자 송신에 필요한 씨앗: {seedsNeeded}개</p>
-            <p>현재 보유한 씨앗: {userSeeds}개</p>
-        </div>
-
-        {/* 문자 보내기 버튼 */}
-        <button onClick={sendMessage}>문자 보내기</button>
-
-        <Link to="/">
-        <button>홈 화면으로 이동</button>
-        </Link>
-
-        {/* 모달 창 */}
-        {isModalOpen && (
-        <div style={modalStyle}>
-            <div style={modalContentStyle}>
-            <h2>이미지 생성</h2>
-            <img
-                src={'https://i.namu.wiki/i/rpLVfxepTgJITLsfXb1D4rc60K7e-QYWnCNbwI-_NUcTZ__vUSpcOygvmBV3IzWHOhY8xd-Kli4kOcr99EN1xg.svg'}
-                alt="업로드된 이미지"
-                style={{ width: '100%', height: 'auto' }}
+          <div>
+            <h3>키워드 입력 (선택)</h3>
+            <input
+              type="text"
+              value={keyword}
+              onChange={handleKeywordChange}
+              placeholder="50% 할인, 피자"
+              style={styles.input}
             />
-            <div>
-                <input
-                type="text"
-                placeholder="이미지 제목 입력"
-                value={imageTitle}
-                onChange={(e) => setImageTitle(e.target.value)}
-                />
-            </div>
-            <div>
-                <input type="file" accept="image/*" onChange={handleFileUpload} />
-            </div>
-            <button onClick={applyImage}>이미지 적용하기</button>
-            <button onClick={closeModal}>닫기</button>
-            </div>
+          </div>
+          <button onClick={handleImageGeneration} style={styles.generateButton}>
+            이미지 생성하기
+          </button>
         </div>
+      </div>
+
+      {/* 오른쪽 섹션 */}
+      <div style={styles.rightSection}>
+        <h2>이미지 생성 결과</h2>
+        <div style={styles.imageGrid}>
+          {selectedImages.map((image, index) => (
+            <img
+              key={index}
+              src={image.src}
+              alt={image.alt}
+              style={{
+                ...styles.generatedImage,
+                border: hoveredImageIndex === index ? '3px solid #007BFF' : '1px solid #ccc', // 테두리 조건 추가
+              }}
+              onClick={() => handleImageClick(image)} // 이미지 클릭 이벤트 핸들러
+              onMouseEnter={() => handleMouseEnter(index)} // 마우스 엔터 이벤트 핸들러
+              onMouseLeave={handleMouseLeave} // 마우스 리브 이벤트 핸들러
+            />
+          ))}
+        </div>
+
+        {/* 이미지 재생성 버튼 */}
+        {showRegenerateButton && (
+          <button onClick={handleImageRegeneration} style={styles.generateButton}>
+            이미지 재생성하기
+          </button>
         )}
+      </div>
+    </div>
+
+
+
+
+      {/* 플로팅 버튼: 화면 상단으로 이동 */}
+      <button className="custom-floating-button floating-button" onClick={openModal}>
+        {'<<'}
+      </button>
+
+
+        {/* 로그인 모달 */}
+      <Modal 
+        isOpen={modalIsOpen} 
+        onRequestClose={closeModal} 
+        className="custom-modal" // 애니메이션 클래스 추가
+        overlayClassName="Overlay" // 오버레이 클래스 추가
+        style={modalStyle} // 모달 스타일 적용
+      >
+        {/* 모달 닫기 버튼 추가 */}
+        <button className="custom-close-button close-button" onClick={closeModal} style={{ marginBottom: '20px' }}>
+          {'>>'}
+        </button>
+        
+        <h2>로그인</h2>
+        <input
+          type="text"
+          placeholder="아이디"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="비밀번호"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button className="custom-login-button" onClick={handleLogin}>
+          로그인
+        </button>
+      </Modal>
     </div>
   );
 }
 
+const styles = {
+  container: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '20px',
+    fontFamily: 'Arial, sans-serif',
+  },
+  leftSection: {
+    width: '45%',
+    paddingRight: '20px',
+    borderRight: '1px solid #ccc',
+  },
+  rightSection: {
+    width: '50%',
+    paddingLeft: '20px',
+  },
+  explanation: {
+    marginBottom: '20px',
+    backgroundColor: '#f9f9f9',
+    padding: '10px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+  },
+  textArea: {
+    width: '100%',
+    height: '100px',
+    padding: '10px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+  },
+  charCount: {
+    textAlign: 'right',
+    color: '#555',
+  },
+  keywordSection: {
+    marginTop: '20px',
+  },
+  dropdownContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '10px',
+  },
+  select: {
+    width: '48%',
+    padding: '10px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+  },
+  input: {
+    width: '100%',
+    padding: '10px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+    marginBottom: '10px',
+  },
+  generateButton: {
+    padding: '10px 20px',
+    backgroundColor: '#007BFF',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+  },
+  imageGrid: {
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
+  generatedImage: {
+    width: '30%',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+  },
+  regenerateButton: {
+    marginTop: '20px',
+    padding: '10px 20px',
+    backgroundColor: '#28A745',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+  },
+};
+
 // 모달 스타일
 const modalStyle = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000,
+  content: {
+    top: '0', // 상단 정렬
+    right: '0', // 오른쪽 정렬
+    bottom: '0', // 하단 정렬
+    left: '0', // 왼쪽 정렬
+    width: '30%', // 가로 길이를 30%로 설정
+    height: '100%', // 세로 길이를 100%로 설정
+    margin: '0', // 마진 제거
+    padding: '20px', // 적절한 패딩 추가
+    opacity: 1, // 불투명도 설정
+    backgroundColor: 'white', // 원하는 배경 색으로 변경
+    overflowY: 'auto', // 내용이 넘칠 경우 스크롤 가능하도록 설정
+    zIndex: 1001, // 오버레이보다 위에 표시되도록 설정
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+  },
 };
 
 const modalContentStyle = {
