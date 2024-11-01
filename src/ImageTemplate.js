@@ -10,16 +10,38 @@ import Modal from 'react-modal';
 import { Link, useNavigate } from 'react-router-dom';
 import './App.css';
 
-const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
+// const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
+const FREEPIK_ACCESS_KEY = 'FPSX635f8874fb044212b7f4c1e2891f18e3'; // Freepik API 키
 
 const ItemType = {
   IMAGE: 'image',
 };
 
+// Unsplash에서 이미지 가져오기
+// function DraggableImage({ image }) {
+//   const [{ isDragging }, drag] = useDrag(() => ({
+//     type: ItemType.IMAGE,
+//     item: { src: image.urls.small },
+//     collect: (monitor) => ({
+//       isDragging: monitor.isDragging(),
+//     }),
+//   }));
+
+//   return (
+//     <img
+//       ref={drag}
+//       src={image.urls.small}
+//       alt={image.alt_description}
+//       style={{ ...styles.image, opacity: isDragging ? 0.5 : 1 }}
+//     />
+//   );
+// }
+
+// DraggableImage 컴포넌트에서의 이미지 URL 수정
 function DraggableImage({ image }) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ItemType.IMAGE,
-    item: { src: image.urls.small },
+    item: { src: image.image_url }, // Freepik API에서 사용하는 이미지 URL
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -28,19 +50,16 @@ function DraggableImage({ image }) {
   return (
     <img
       ref={drag}
-      src={image.urls.small}
-      alt={image.alt_description}
+      src={image.image_url} // Freepik API에서 사용하는 이미지 URL
+      alt={image.title}
       style={{ ...styles.image, opacity: isDragging ? 0.5 : 1 }}
     />
   );
 }
 
-
-
-
-function ResizableImage({ img, onResize, onDrop, onRemove }) {
+function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
   const [size, setSize] = useState(img.size);
-  const [isHovered, setIsHovered] = useState(false); // 호버 상태 추가
+  const [isHovered, setIsHovered] = useState(false);
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ItemType.IMAGE,
@@ -76,17 +95,18 @@ function ResizableImage({ img, onResize, onDrop, onRemove }) {
   return (
     <div
       ref={drag}
+      onClick={() => onClick(img.src)} // 이미지 클릭 시 호출
       style={{
         position: 'absolute',
         display: 'inline-block',
         left: img.position.left,
         top: img.position.top,
         opacity: isDragging ? 0.5 : 1,
-        boxShadow: isHovered ? '0 4px 10px rgba(0, 0, 0, 0.5)' : 'none', // 호버 시 그림자
-        overflow: 'hidden', // 추가된 이미지가 벗어날 경우 숨기기
+        boxShadow: isHovered ? '0 4px 10px rgba(0, 0, 0, 0.5)' : 'none',
+        overflow: 'hidden',
       }}
-      onMouseEnter={() => setIsHovered(true)} // 마우스가 들어왔을 때
-      onMouseLeave={() => setIsHovered(false)} // 마우스가 나갔을 때
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <img
         src={img.src}
@@ -95,7 +115,7 @@ function ResizableImage({ img, onResize, onDrop, onRemove }) {
           width: size.width,
           height: size.height,
           position: 'relative',
-          borderRadius: '10px', // 모서리를 둥글게 만들기
+          borderRadius: '10px',
         }}
       />
       <div
@@ -104,19 +124,19 @@ function ResizableImage({ img, onResize, onDrop, onRemove }) {
           position: 'absolute',
           right: 0,
           bottom: 0,
-          width: '20px', // 버튼의 크기
+          width: '20px',
           height: '20px',
           backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          cursor: 'nwse-resize', // 커서 모양 변경
-          opacity: isHovered ? 1 : 0, // 호버 시에만 보이도록 설정
-          visibility: isHovered ? 'visible' : 'hidden', // 호버 시에만 보이도록 설정
-          transition: 'opacity 0.3s ease', // 부드러운 전환 효과
+          cursor: 'nwse-resize',
+          opacity: isHovered ? 1 : 0,
+          visibility: isHovered ? 'visible' : 'hidden',
+          transition: 'opacity 0.3s ease',
         }}
       />
       <button
         onClick={(e) => {
-          e.stopPropagation(); // 클릭 이벤트 전파 방지
-          onRemove(img.src); // 이미지 제거 호출
+          e.stopPropagation();
+          onRemove(img.src);
         }}
         style={{
           position: 'absolute',
@@ -125,32 +145,20 @@ function ResizableImage({ img, onResize, onDrop, onRemove }) {
           backgroundColor: 'transparent',
           border: 'none',
           cursor: 'pointer',
-          color: 'black', // 호버 시 색상 변경
+          color: 'black',
           fontSize: '20px',
-          opacity: isHovered ? 1 : 0, // 호버 시에만 보이도록 설정
-          visibility: isHovered ? 'visible' : 'hidden', // 호버 시에만 보이도록 설정
-          transition: 'opacity 0.3s ease', // 부드러운 전환 효과
+          opacity: isHovered ? 1 : 0,
+          visibility: isHovered ? 'visible' : 'hidden',
+          transition: 'opacity 0.3s ease',
         }}
       >
-        &times; {/* X 표시 */}
+        &times;
       </button>
     </div>
   );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-const DroppableArea = ({ onDrop, centerImages, setCenterImages }) => {
+const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) => {
   const [, drop] = useDrop(() => ({
     accept: ItemType.IMAGE,
     drop: (item, monitor) => {
@@ -161,14 +169,12 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages }) => {
       const adjustedLeft = left - centerOffset.left;
       const adjustedTop = top - centerOffset.top;
 
-      // 배경 이미지의 경계 설정
       const centerImageWidth = centerOffset.width;
       const centerImageHeight = centerOffset.height;
 
-      // 새로운 위치가 경계를 벗어나지 않도록 조정
       const newPosition = {
-        left: Math.max(0, Math.min(adjustedLeft, centerImageWidth - 100)), // 100은 이미지의 최소 너비
-        top: Math.max(0, Math.min(adjustedTop, centerImageHeight - 100)), // 100은 이미지의 최소 높이
+        left: Math.max(0, Math.min(adjustedLeft, centerImageWidth - 100)),
+        top: Math.max(0, Math.min(adjustedTop, centerImageHeight - 100)),
       };
 
       onDrop(item.src, newPosition);
@@ -190,7 +196,7 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages }) => {
       {centerImages.map((img, index) => (
         <ResizableImage
           key={index}
-          img={{ ...img, size: img.size || { width: 100, height: 100 } }} // 기본 크기 설정
+          img={{ ...img, size: img.size || { width: 100, height: 100 } }}
           onResize={(src, newSize) => {
             setCenterImages((prev) => 
               prev.map(image => image.src === src ? { ...image, size: newSize } : image)
@@ -201,7 +207,6 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages }) => {
             const centerImageWidth = centerOffset.width;
             const centerImageHeight = centerOffset.height;
 
-            // 새로운 위치가 경계를 벗어나지 않도록 조정
             const newPosition = {
               left: Math.max(0, Math.min(position.left, centerImageWidth - img.size.width)),
               top: Math.max(0, Math.min(position.top, centerImageHeight - img.size.height)),
@@ -211,17 +216,13 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages }) => {
               prev.map(image => image.src === src ? { ...image, position: newPosition } : image)
             );
           }}
-          onRemove={handleRemove} // 이미지 제거 함수 전달
+          onRemove={handleRemove}
+          onClick={onImageClick} // 클릭 핸들러 전달
         />
       ))}
     </div>
   );
 };
-
-
-
-
-
 
 function ImageTemplate() {
   const navigate = useNavigate();
@@ -237,6 +238,8 @@ function ImageTemplate() {
   const [centerImages, setCenterImages] = useState([]);
   const [page, setPage] = useState(1);
   const galleryRef = useRef(null);
+  
+  const [selectedImage, setSelectedImage] = useState(null); // 선택된 이미지 상태 추가
 
   const openModal = () => setModalIsOpen(true);
   const closeModal = () => setModalIsOpen(false);
@@ -258,21 +261,23 @@ function ImageTemplate() {
     navigate('/finish-send-message');
   };
 
-  const fetchImages = async () => {
-    try {
-      const response = await axios.get(`https://api.unsplash.com/search/photos`, {
-        params: {
-          query: searchKeyword,
-          client_id: UNSPLASH_ACCESS_KEY,
-          page: page,
-          per_page: 10,
-        },
-      });
-      setImages((prevImages) => [...prevImages, ...response.data.results]);
-    } catch (error) {
-      console.error("이미지 가져오기 오류:", error);
-    }
-  };
+// 이미지 가져오기 로직 수정
+const fetchImages = async () => {
+  try {
+    const response = await axios.get(`https://api.freepik.com/v2/search`, { // Freepik API URL
+      params: {
+        query: searchKeyword,
+        access_token: FREEPIK_ACCESS_KEY, // Freepik API 키
+        page: page,
+        per_page: 10,
+      },
+    });
+    setImages((prevImages) => [...prevImages, ...response.data.data]); // 응답 데이터 구조에 맞게 수정
+  } catch (error) {
+    console.error("이미지 가져오기 오류:", error);
+  }
+};
+
 
   const handleSearch = () => {
     if (searchKeyword) {
@@ -311,13 +316,58 @@ function ImageTemplate() {
     setCenterImages((prev) => {
       const existingImage = prev.find(image => image.src === src);
       if (existingImage) {
-        // 이미지가 이미 존재하면 위치만 업데이트
         return prev.map(image => image.src === src ? { ...image, position } : image);
       }
-      // 새로운 이미지만 추가
       return [...prev, { src, position, size: { width: 100, height: 100 } }];
     });
   };
+
+  const handleImageClick = (src) => {
+    setSelectedImage(src);
+  };
+
+  const handleKeyDown = (e) => {
+    if (selectedImage) {
+      const centerOffset = document.getElementById('center-image').getBoundingClientRect();
+      const centerImageWidth = centerOffset.width;
+      const centerImageHeight = centerOffset.height;
+  
+      setCenterImages((prev) =>
+        prev.map(image => {
+          if (image.src === selectedImage) {
+            const newPosition = { ...image.position };
+  
+            switch (e.key) {
+              case 'ArrowUp':
+                newPosition.top = Math.max(0, newPosition.top - 5);
+                break;
+              case 'ArrowDown':
+                newPosition.top = Math.min(centerImageHeight - image.size.height, newPosition.top + 5);
+                break;
+              case 'ArrowLeft':
+                newPosition.left = Math.max(0, newPosition.left - 5); // 왼쪽 경계
+                break;
+              case 'ArrowRight':
+                newPosition.left = Math.min(centerImageWidth - image.size.width, newPosition.left + 5); // 오른쪽 경계
+                break;
+              default:
+                break;
+            }
+  
+            return { ...image, position: newPosition };
+          }
+          return image;
+        })
+      );
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedImage]);
 
   const renderContent = () => {
     switch (activePage) {
@@ -379,7 +429,12 @@ function ImageTemplate() {
             {renderContent()}
           </div>
 
-          <DroppableArea onDrop={onDrop} centerImages={centerImages} setCenterImages={setCenterImages} />
+          <DroppableArea 
+            onDrop={onDrop} 
+            centerImages={centerImages} 
+            setCenterImages={setCenterImages} 
+            onImageClick={handleImageClick} // 클릭 핸들러 전달
+          />
 
           <div style={styles.rightContainer}>
             <h3>발신자 번호 입력</h3>
@@ -456,6 +511,7 @@ function ImageTemplate() {
     </DndProvider>
   );
 }
+
 
 // 사이드바 컴포넌트
 function Sidebar({ setActivePage }) {
