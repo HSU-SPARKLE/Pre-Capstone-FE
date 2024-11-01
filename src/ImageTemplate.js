@@ -10,38 +10,18 @@ import Modal from 'react-modal';
 import { Link, useNavigate } from 'react-router-dom';
 import './App.css';
 
-// const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
-const FREEPIK_ACCESS_KEY = 'FPSX635f8874fb044212b7f4c1e2891f18e3'; // Freepik API 키
+const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
+// const FREEPIK_ACCESS_KEY = 'FPSX635f8874fb044212b7f4c1e2891f18e3'; // Freepik API 키
 
 const ItemType = {
   IMAGE: 'image',
 };
 
-// Unsplash에서 이미지 가져오기
-// function DraggableImage({ image }) {
-//   const [{ isDragging }, drag] = useDrag(() => ({
-//     type: ItemType.IMAGE,
-//     item: { src: image.urls.small },
-//     collect: (monitor) => ({
-//       isDragging: monitor.isDragging(),
-//     }),
-//   }));
 
-//   return (
-//     <img
-//       ref={drag}
-//       src={image.urls.small}
-//       alt={image.alt_description}
-//       style={{ ...styles.image, opacity: isDragging ? 0.5 : 1 }}
-//     />
-//   );
-// }
-
-// DraggableImage 컴포넌트에서의 이미지 URL 수정
 function DraggableImage({ image }) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ItemType.IMAGE,
-    item: { src: image.image_url }, // Freepik API에서 사용하는 이미지 URL
+    item: { src: image.urls.small },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -50,12 +30,32 @@ function DraggableImage({ image }) {
   return (
     <img
       ref={drag}
-      src={image.image_url} // Freepik API에서 사용하는 이미지 URL
-      alt={image.title}
+      src={image.urls.small}
+      alt={image.alt_description}
       style={{ ...styles.image, opacity: isDragging ? 0.5 : 1 }}
     />
   );
 }
+
+// DraggableImage 컴포넌트에서의 이미지 URL 수정
+// function DraggableImage({ image }) {
+//   const [{ isDragging }, drag] = useDrag(() => ({
+//     type: ItemType.IMAGE,
+//     item: { src: image.image_url }, // Freepik API에서 사용하는 이미지 URL
+//     collect: (monitor) => ({
+//       isDragging: monitor.isDragging(),
+//     }),
+//   }));
+
+//   return (
+//     <img
+//       ref={drag}
+//       src={image.image_url} // Freepik API에서 사용하는 이미지 URL
+//       alt={image.title}
+//       style={{ ...styles.image, opacity: isDragging ? 0.5 : 1 }}
+//     />
+//   );
+// }
 
 function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
   const [size, setSize] = useState(img.size);
@@ -264,15 +264,15 @@ function ImageTemplate() {
 // 이미지 가져오기 로직 수정
 const fetchImages = async () => {
   try {
-    const response = await axios.get(`https://api.freepik.com/v2/search`, { // Freepik API URL
+    const response = await axios.get(`https://api.unsplash.com/search/photos`, {
       params: {
         query: searchKeyword,
-        access_token: FREEPIK_ACCESS_KEY, // Freepik API 키
+        client_id: UNSPLASH_ACCESS_KEY,
         page: page,
-        per_page: 10,
+        per_page: 30,
       },
     });
-    setImages((prevImages) => [...prevImages, ...response.data.data]); // 응답 데이터 구조에 맞게 수정
+    setImages((prevImages) => [...prevImages, ...response.data.results]);
   } catch (error) {
     console.error("이미지 가져오기 오류:", error);
   }
@@ -369,36 +369,66 @@ const fetchImages = async () => {
     };
   }, [selectedImage]);
 
-  const renderContent = () => {
-    switch (activePage) {
-      case '로고':
-        return <div><h2>로고 삽입 화면입니다.</h2></div>;
-      case 'QR 코드':
-        return <div><h2>QR 코드 삽입 화면입니다.</h2></div>;
-      case '텍스트':
-        return <div><h2>텍스트 입력 화면입니다.</h2></div>;
-      case '이미지':
-        return (
-          <div>
-            <h2>이미지 삽입 화면입니다.</h2>
-            <input 
-              type="text" 
-              value={searchKeyword} 
-              onChange={(e) => setSearchKeyword(e.target.value)} 
-              placeholder="검색 키워드 입력"
-            />
-            <button onClick={handleSearch}>검색</button>
-            <div ref={galleryRef} style={styles.imageGallery}>
-              {images.map((image) => (
-                <DraggableImage key={image.id} image={image} />
-              ))}
-            </div>
+
+// ImageTemplate 컴포넌트의 renderContent 함수 수정
+const renderContent = () => {
+  switch (activePage) {
+    case '로고':
+      return (
+        <div>
+          <h2>로고 삽입 화면입니다.</h2>
+          <input type="file" accept="image/*" onChange={handleImageUpload} />
+        </div>
+      );
+    case 'QR 코드':
+            return (
+        <div>
+          <h2>QR 코드 삽입 화면입니다.</h2>
+          <input type="file" accept="image/*" onChange={handleImageUpload} />
+        </div>
+      );
+    case '텍스트':
+      return <div><h2>텍스트 입력 화면입니다.</h2></div>;
+    case '이미지':
+      return (
+        <div>
+          <h2>이미지 삽입 화면입니다.</h2>
+          <input 
+            type="text" 
+            value={searchKeyword} 
+            onChange={(e) => setSearchKeyword(e.target.value)} 
+            placeholder="검색 키워드 입력"
+          />
+          <button onClick={handleSearch}>검색</button>
+          <div ref={galleryRef} style={styles.imageGallery}>
+            {images.map((image) => (
+              <DraggableImage key={image.id} image={image} />
+            ))}
           </div>
-        );
-      default:
-        return null;
-    }
-  };
+        </div>
+      );
+    default:
+      return null;
+  }
+};
+
+// 로컬 이미지 업로드 핸들러 추가
+const handleImageUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const localImage = {
+        src: reader.result,
+        position: { left: 0, top: 0 },
+        size: { width: 100, height: 100 }
+      };
+      onDrop(localImage.src, localImage.position);
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
 
   return (
     <DndProvider backend={HTML5Backend}>
