@@ -13,6 +13,7 @@ import './App.css';
 const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
 // const FREEPIK_ACCESS_KEY = 'FPSX635f8874fb044212b7f4c1e2891f18e3'; // Freepik API 키
 
+
 const ItemType = {
   IMAGE: 'image',
 };
@@ -76,11 +77,24 @@ function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
     const startWidth = size.width;
     const startHeight = size.height;
 
+    const aspectRatio = startWidth / startHeight; // 비율 저장
+
     const handleMouseMove = (e) => {
       const newWidth = Math.max(50, startWidth + (e.clientX - startX));
-      const newHeight = Math.max(50, startHeight + (e.clientY - startY));
-      setSize({ width: newWidth, height: newHeight });
-      onResize(img.src, { width: newWidth, height: newHeight });
+      const newHeight = newWidth / aspectRatio; // 비율 유지
+
+      // 최대 크기 제한
+      const constrainedWidth = Math.min(newWidth, 400);
+      const constrainedHeight = Math.min(newHeight, 600);
+
+      // 비율 유지하며 최대 크기 적용
+      if (constrainedWidth / aspectRatio <= 600) {
+        setSize({ width: constrainedWidth, height: constrainedWidth / aspectRatio });
+      } else {
+        setSize({ width: constrainedWidth, height: constrainedHeight });
+      }
+
+      onResize(img.src, { width: constrainedWidth, height: constrainedHeight });
     };
 
     const handleMouseUp = () => {
@@ -115,7 +129,6 @@ function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
           width: size.width,
           height: size.height,
           position: 'relative',
-          borderRadius: '10px',
         }}
       />
       <div
@@ -158,6 +171,9 @@ function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
   );
 }
 
+
+
+
 const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) => {
   const [, drop] = useDrop(() => ({
     accept: ItemType.IMAGE,
@@ -177,7 +193,44 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) 
         top: Math.max(0, Math.min(adjustedTop, centerImageHeight - 100)),
       };
 
-      onDrop(item.src, newPosition);
+      // 기존 이미지가 있는지 확인
+      const existingImage = centerImages.find(image => image.src === item.src);
+      if (existingImage) {
+        // 기존 이미지의 위치만 업데이트
+        setCenterImages(prev => 
+          prev.map(image => 
+            image.src === item.src ? { ...image, position: newPosition } : image
+          )
+        );
+      } else {
+        // 새로운 이미지 추가
+        const newImage = new Image();
+        newImage.src = item.src;
+
+        newImage.onload = () => {
+          const originalWidth = newImage.width;
+          const originalHeight = newImage.height;
+
+          // 원본 이미지의 크기를 기준으로 크기를 조정
+          const maxWidth = 200; // 최대 너비
+          const maxHeight = 300; // 최대 높이
+
+          // 비율 유지하며 크기 조정
+          let newWidth, newHeight;
+          if (originalWidth / originalHeight > maxWidth / maxHeight) {
+            newWidth = Math.min(originalWidth, maxWidth);
+            newHeight = (originalHeight / originalWidth) * newWidth;
+          } else {
+            newHeight = Math.min(originalHeight, maxHeight);
+            newWidth = (originalWidth / originalHeight) * newHeight;
+          }
+
+          setCenterImages(prev => [
+            ...prev,
+            { src: item.src, position: newPosition, size: { width: newWidth, height: newHeight } }
+          ]);
+        };
+      }
     },
   }));
 
@@ -198,7 +251,7 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) 
           key={index}
           img={{ ...img, size: img.size || { width: 100, height: 100 } }}
           onResize={(src, newSize) => {
-            setCenterImages((prev) => 
+            setCenterImages(prev => 
               prev.map(image => image.src === src ? { ...image, size: newSize } : image)
             );
           }}
@@ -212,7 +265,7 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) 
               top: Math.max(0, Math.min(position.top, centerImageHeight - img.size.height)),
             };
 
-            setCenterImages((prev) => 
+            setCenterImages(prev => 
               prev.map(image => image.src === src ? { ...image, position: newPosition } : image)
             );
           }}
@@ -224,7 +277,12 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) 
   );
 };
 
-function ImageTemplate() {
+
+
+
+
+
+function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUrl 추가
   const navigate = useNavigate();
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [username, setUsername] = useState('');
@@ -238,6 +296,11 @@ function ImageTemplate() {
   const [centerImages, setCenterImages] = useState([]);
   const [page, setPage] = useState(1);
   const galleryRef = useRef(null);
+  
+
+  
+  const canvasRef = useRef(null); // 캔버스 참조 추가
+
   
   const [selectedImage, setSelectedImage] = useState(null); // 선택된 이미지 상태 추가
 
@@ -258,8 +321,82 @@ function ImageTemplate() {
     console.log("발신 번호:", senderNumber);
     console.log("주소:", address);
     console.log("메시지:", message);
+
+      // 이미지 캡처 및 저장 기능
+    captureAndSaveImage();
+
     navigate('/finish-send-message');
   };
+
+  // 이미지를 캡쳐하여 저장하는 함수
+  const captureAndSaveImage = () => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+  
+    // 중앙 이미지 크기
+    const centerImageWidth = 400;
+    const centerImageHeight = 600;
+  
+    // 캔버스 크기를 중앙 이미지 크기로 설정
+    canvas.width = centerImageWidth;
+    canvas.height = centerImageHeight;
+  
+    // 중앙 이미지 로드
+    const centerImg = new Image();
+    centerImg.crossOrigin = 'Anonymous'; // CORS 허용
+    centerImg.src = "https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg"; // 중앙 이미지 URL
+  
+    centerImg.onload = () => {
+      // 중앙 이미지 그리기
+      context.drawImage(centerImg, 0, 0, centerImageWidth, centerImageHeight);
+  
+      // 모든 이미지를 그리기 위한 Promise 배열
+      const imagePromises = [];
+  
+      // 추가된 이미지 그리기
+      centerImages.forEach(img => {
+        const image = new Image();
+        image.crossOrigin = 'Anonymous'; // CORS 허용
+        image.src = img.src;
+  
+        const promise = new Promise((resolve) => {
+          image.onload = () => {
+            // 추가 이미지의 비율을 유지하며 그리기
+            const aspectRatio = image.width / image.height;
+            
+            // 설정된 너비를 기준으로 높이 계산
+            const newWidth = img.size.width; // 설정된 너비
+            const newHeight = newWidth / aspectRatio; // 비율에 따라 높이 계산
+  
+            // 위치 조정
+            const adjustedLeft = img.position.left; // 캔버스 크기에 맞춰 조정
+            const adjustedTop = img.position.top; // 캔버스 크기에 맞춰 조정
+  
+            // 추가 이미지 그리기
+            context.drawImage(image, adjustedLeft, adjustedTop, newWidth, newHeight);
+            resolve();
+          };
+        });
+  
+        imagePromises.push(promise);
+      });
+  
+      // 모든 이미지가 그려진 후, 데이터 URL로 변환
+      Promise.all(imagePromises).then(() => {
+        const dataUrl = canvas.toDataURL('image/png');
+        setCapturedImageUrl(dataUrl); // 상태 업데이트
+        console.log("저장된 이미지 URL:", dataUrl); // 이미지 URL 출력
+      });
+    };
+  };
+  
+  
+  
+  
+  
+  
+  
+  
 
 // 이미지 가져오기 로직 수정
 const fetchImages = async () => {
@@ -313,14 +450,34 @@ const fetchImages = async () => {
   }, []);
 
   const onDrop = (src, position) => {
-    setCenterImages((prev) => {
-      const existingImage = prev.find(image => image.src === src);
-      if (existingImage) {
-        return prev.map(image => image.src === src ? { ...image, position } : image);
+    const newImage = new Image();
+    newImage.src = src;
+  
+    newImage.onload = () => {
+      const originalWidth = newImage.width;
+      const originalHeight = newImage.height;
+  
+      // 원본 이미지의 크기를 기준으로 크기를 조정
+      const maxWidth = 400; // 최대 너비
+      const maxHeight = 600; // 최대 높이
+  
+      // 비율 유지하며 크기 조정
+      let newWidth, newHeight;
+      if (originalWidth / originalHeight > maxWidth / maxHeight) {
+        newWidth = Math.min(originalWidth, maxWidth);
+        newHeight = (originalHeight / originalWidth) * newWidth;
+      } else {
+        newHeight = Math.min(originalHeight, maxHeight);
+        newWidth = (originalWidth / originalHeight) * newHeight;
       }
-      return [...prev, { src, position, size: { width: 100, height: 100 } }];
-    });
+  
+      setCenterImages((prev) => [
+        ...prev,
+        { src, position, size: { width: newWidth, height: newHeight } },
+      ]);
+    };
   };
+  
 
   const handleImageClick = (src) => {
     setSelectedImage(src);
@@ -537,6 +694,10 @@ const handleImageUpload = (event) => {
             로그인
           </button>
         </Modal>
+
+        <canvas ref={canvasRef} style={{ display: 'none' }} width={800} height={600}></canvas> {/* 캔버스 숨김 */}
+
+
       </div>
     </DndProvider>
   );
@@ -593,8 +754,9 @@ const modalStyle = {
 const styles = {
   appContainer: {
     display: 'flex',
-    height: '100vh',
+    height: '100%',
     padding: '20px',
+    overflow: 'hidden', // 전체 스크롤 방지
   },
   leftContainer: {
     width: '15%',
@@ -607,26 +769,25 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-start',
-    paddingRight: '10px',
+    
   },
   centerContainer: {
-    width: '30%',
+    width: '400px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
   centerImage: {
-    width: '90%',
-    height: 'auto',
-    border: '5px solid #007bff', // 테두리 추가
+    width: '400px',
+    height: '600px',
     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)', // 그림자 추가
   },
   rightContainer: {
-    width: '35%',
+    width: '30%',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-around',
+    justifyContent: 'space-around', // 'space-around'에서 'flex-start'로 변경
   },
   sidebar: {
     display: 'flex',
@@ -656,7 +817,7 @@ const styles = {
   },
   textarea: {
     width: '100%',
-    height: '100px',
+    height: '80px',
     padding: '10px',
     fontSize: '16px',
   },

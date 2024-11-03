@@ -1,5 +1,4 @@
-// src/App.js
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './Home';
 import SendMessage from './SendMessage';
@@ -13,6 +12,8 @@ import FinishSendMessage from './FinishSendMessage';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
+  const [capturedImageUrl, setCapturedImageUrl] = useState(''); // dataUrl 상태 추가
+
   return (
     <Router>
       <Routes>
@@ -23,8 +24,18 @@ function App() {
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/create-image" element={<CreateImage />} />
         <Route path="/address-book-manage" element={<AddressBookManage />} />
-        <Route path="/image-template" element={<ImageTemplate />} />
-        <Route path="/finish-send-message" element={<FinishSendMessage />} />
+        
+        {/* ImageTemplate에 setCapturedImageUrl을 전달 */}
+        <Route 
+          path="/image-template" 
+          element={<ImageTemplate setCapturedImageUrl={setCapturedImageUrl} />} 
+        />
+        
+        {/* FinishSendMessage에 capturedImageUrl을 전달 */}
+        <Route 
+          path="/finish-send-message" 
+          element={<FinishSendMessage capturedImageUrl={capturedImageUrl} />} 
+        />
       </Routes>
     </Router>
   );

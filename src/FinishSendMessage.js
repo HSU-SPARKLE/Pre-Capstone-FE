@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-import Button from 'react-bootstrap/Button'; // Button 컴포넌트 import
-import Modal from 'react-modal'; // Modal 컴포넌트 import
-import { Link, useNavigate } from 'react-router-dom'; // useNavigate 추가
-import './App.css'; // CSS 파일 import
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-modal';
+import { Link, useNavigate } from 'react-router-dom';
+import './App.css';
 
-function FinishSendMessage() {
+function FinishSendMessage({ capturedImageUrl }) { // props로 capturedImageUrl 추가
   return (
     <div>
-      <MainContent />
+      <MainContent capturedImageUrl={capturedImageUrl} /> {/* props로 전달 */}
     </div>
   );
 }
 
-function MainContent() {
-  const navigate = useNavigate(); // useNavigate 훅 사용
-
+function MainContent({ capturedImageUrl }) { // props로 capturedImageUrl 추가
+  const navigate = useNavigate();
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -53,7 +52,9 @@ function MainContent() {
         </div>
         <div style={styles.promoAd}>
           <div style={styles.imageSection}>
-            <img src="https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg" alt="Promo" style={styles.promoImage} />
+            {capturedImageUrl && ( // capturedImageUrl이 있을 경우 이미지를 표시
+              <img src={capturedImageUrl} alt="Promo" style={styles.promoImage} />
+            )}
           </div>
           <div style={styles.promoDetails}>
             <ul>
@@ -64,20 +65,17 @@ function MainContent() {
           </div>
         </div>
 
-        {/* 플로팅 버튼: 화면 상단으로 이동 */}
         <button className="custom-floating-button floating-button" onClick={openModal}>
           {'<<'}
         </button>
 
-        {/* 로그인 모달 */}
         <Modal 
           isOpen={modalIsOpen} 
           onRequestClose={closeModal} 
-          className="custom-modal" // 애니메이션 클래스 추가
-          overlayClassName="Overlay" // 오버레이 클래스 추가
-          style={modalStyle} // 모달 스타일 적용
+          className="custom-modal"
+          overlayClassName="Overlay"
+          style={modalStyle}
         >
-          {/* 모달 닫기 버튼 추가 */}
           <button className="custom-close-button close-button" onClick={closeModal} style={{ marginBottom: '20px' }}>
             {'>>'}
           </button>
@@ -158,8 +156,8 @@ const styles = {
     marginRight: '20px',
   },
   promoImage: {
-    width: '300px',
-    height: 'auto',
+    width: '400px',
+    height: '600px',
   },
   promoDetails: {
     listStyleType: 'none',
