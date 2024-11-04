@@ -154,7 +154,7 @@ function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
 
 
 
-const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) => {
+const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, canvasRef }) => {
   const [, drop] = useDrop(() => ({
     accept: ItemType.IMAGE,
     drop: (item, monitor) => {
@@ -213,17 +213,21 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) 
   }));
 
   const handleRemove = (src) => {
+    
     setCenterImages(prev => prev.filter(image => image.src !== src));
   };
 
   return (
     <div ref={drop} style={styles.centerContainer}>
-      <img
+
+      <canvas
+        ref={canvasRef}
+        width={400}
+        height={600}
         id="center-image"
-        src="https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg"
-        alt="Center"
-        style={styles.centerImage}
-      />
+        className={centerImages}
+        />
+        
       {centerImages.map((img, index) => (
         <ResizableImage
           key={index}
@@ -261,7 +265,7 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
   const [shadowOffsetX, setShadowOffsetX] = useState(0);
   const [shadowOffsetY, setShadowOffsetY] = useState(0);
   const CANVAS_WIDTH = 400;
-  const CANVAS_HEIGHT = 300;
+  const CANVAS_HEIGHT = 600;
 
 // 텍스트 추가 시 위치를 이미지 중앙으로 설정
 const addText = () => {
@@ -345,10 +349,10 @@ const drawTexts = (ctx) => {
     if (backgroundColor) {
       ctx.fillStyle = backgroundColor;
       ctx.fillRect(
-        x - borderWidth,
-        y - parseInt(fontSize),
-        ctx.measureText(text).width + 2 * borderWidth,
-        parseInt(fontSize) + 2 * borderWidth
+        x - 2,
+        y - parseInt(fontSize, 10),
+        ctx.measureText(text).width + 4,
+        parseInt(fontSize, 10) + 4
       );
     }
 
@@ -406,8 +410,8 @@ const drawLiveText = (ctx) => {
 };
 
 useEffect(() => {
-  if (location.state?.centerImage?.src) {
-    setImage(location.state.centerImage.src);
+  if (location.state && location.state.image) {
+    setImage(location.state.image);
   }
 }, [location.state]);
 
@@ -455,72 +459,80 @@ useEffect(() => {
     console.log("메시지:", message);
 
       // 이미지 캡처 및 저장 기능
-    captureAndSaveImage();
+    captureAndSaveImage(canvasRef);
 
     navigate('/finish-send-message');
   };
 
   // 이미지를 캡쳐하여 저장하는 함수
-  const captureAndSaveImage = () => {
+  const captureAndSaveImage = (canvasRef) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
-  
+
     // 중앙 이미지 크기
     const centerImageWidth = 400;
     const centerImageHeight = 600;
-  
+
     // 캔버스 크기를 중앙 이미지 크기로 설정
     canvas.width = centerImageWidth;
     canvas.height = centerImageHeight;
-  
-    // 중앙 이미지 로드
+
+    // 중앙 이미지에 사용할 이미지 객체 생성
     const centerImg = new Image();
     centerImg.crossOrigin = 'Anonymous'; // CORS 허용
-    centerImg.src = "https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg"; // 중앙 이미지 URL
-  
-    centerImg.onload = () => {
-      // 중앙 이미지 그리기
-      context.drawImage(centerImg, 0, 0, centerImageWidth, centerImageHeight);
-  
-      // 모든 이미지를 그리기 위한 Promise 배열
-      const imagePromises = [];
-  
-      // 추가된 이미지 그리기
-      centerImages.forEach(img => {
-        const image = new Image();
-        image.crossOrigin = 'Anonymous'; // CORS 허용
-        image.src = img.src;
-  
-        const promise = new Promise((resolve) => {
-          image.onload = () => {
-            // 추가 이미지의 비율을 유지하며 그리기
-            const aspectRatio = image.width / image.height;
-            
-            // 설정된 너비를 기준으로 높이 계산
-            const newWidth = img.size.width; // 설정된 너비
-            const newHeight = newWidth / aspectRatio; // 비율에 따라 높이 계산
-  
-            // 위치 조정
-            const adjustedLeft = img.position.left; // 캔버스 크기에 맞춰 조정
-            const adjustedTop = img.position.top; // 캔버스 크기에 맞춰 조정
-  
-            // 추가 이미지 그리기
-            context.drawImage(image, adjustedLeft, adjustedTop, newWidth, newHeight);
-            resolve();
-          };
-        });
-  
-        imagePromises.push(promise);
-      });
-  
-      // 모든 이미지가 그려진 후, 데이터 URL로 변환
-      Promise.all(imagePromises).then(() => {
-        const dataUrl = canvas.toDataURL('image/png');
-        setCapturedImageUrl(dataUrl); // 상태 업데이트
-        console.log("저장된 이미지 URL:", dataUrl); // 이미지 URL 출력
-      });
+
+    // 이미지를 캔버스에 그리는 부분
+    const drawCentralImage = () => {
+        // 중앙 이미지 그리기 (여기서 centerImg는 캔버스의 내용을 의미)
+        context.drawImage(centerImg, 0, 0, centerImageWidth, centerImageHeight);
     };
-  };
+
+    centerImg.onload = () => {
+        // 중앙 이미지를 캔버스에 그리기
+        drawCentralImage();
+
+        // 모든 이미지를 그리기 위한 Promise 배열
+        const imagePromises = [];
+
+        // 추가된 이미지 그리기
+        centerImages.forEach(img => {
+            const image = new Image();
+            image.crossOrigin = 'Anonymous'; // CORS 허용
+            image.src = img.src;
+
+            const promise = new Promise((resolve) => {
+                image.onload = () => {
+                    // 추가 이미지의 비율을 유지하며 그리기
+                    const aspectRatio = image.width / image.height;
+                    
+                    // 설정된 너비를 기준으로 높이 계산
+                    const newWidth = img.size.width; // 설정된 너비
+                    const newHeight = newWidth / aspectRatio; // 비율에 따라 높이 계산
+
+                    // 위치 조정
+                    const adjustedLeft = img.position.left; // 캔버스 크기에 맞춰 조정
+                    const adjustedTop = img.position.top; // 캔버스 크기에 맞춰 조정
+
+                    // 추가 이미지 그리기
+                    context.drawImage(image, adjustedLeft, adjustedTop, newWidth, newHeight);
+                    resolve();
+                };
+            });
+
+            imagePromises.push(promise);
+        });
+
+        // 모든 이미지가 그려진 후, 데이터 URL로 변환
+        Promise.all(imagePromises).then(() => {
+            const dataUrl = canvas.toDataURL('image/png');
+            setCapturedImageUrl(dataUrl); // 상태 업데이트
+            console.log("저장된 이미지 URL:", dataUrl); // 이미지 URL 출력
+        });
+    };
+    // 캔버스의 내용을 이미지로 설정 (중앙 이미지를 캔버스에서 직접 가져오기)
+    centerImg.src = canvas.toDataURL('image/png');
+};
+
 
 // 이미지 가져오기 로직 수정
 const fetchImages = async () => {
@@ -679,6 +691,23 @@ const renderContent = () => {
         placeholder="텍스트 입력" 
         style={styles.textInput}
       />
+
+    <div style={styles.inlineGroup}>
+      <input 
+        type="number" 
+        value={fontSize} 
+        onChange={(e) => setFontSize(e.target.value)} 
+        placeholder="글꼴 크기" 
+        style={styles.numberInput}
+      />
+      <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} style={styles.selectInput}>
+        <option value="Arial">Arial</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Verdana">Verdana</option>
+      </select>
+    </div>
     
   
       <div style={styles.inlineGroup}>
@@ -835,6 +864,7 @@ const handleImageUpload = (event) => {
             centerImages={centerImages} 
             setCenterImages={setCenterImages} 
             onImageClick={handleImageClick} // 클릭 핸들러 전달
+            canvasRef={canvasRef}
           />
 
           <div style={styles.rightContainer}>
@@ -909,7 +939,7 @@ const handleImageUpload = (event) => {
           </button>
         </Modal>
 
-        <canvas ref={canvasRef} style={{ display: 'none' }} width={800} height={600}></canvas> {/* 캔버스 숨김 */}
+        
 
 
       </div>
