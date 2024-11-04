@@ -465,73 +465,63 @@ useEffect(() => {
   };
 
   // 이미지를 캡쳐하여 저장하는 함수
-  const captureAndSaveImage = (canvasRef) => {
+  const captureAndSaveImage = () => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    // 중앙 이미지 크기
+    // 중앙 이미지 크기 설정
     const centerImageWidth = 400;
     const centerImageHeight = 600;
 
-    // 캔버스 크기를 중앙 이미지 크기로 설정
+    // 캔버스 크기 설정
     canvas.width = centerImageWidth;
     canvas.height = centerImageHeight;
 
-    // 중앙 이미지에 사용할 이미지 객체 생성
+    // 중앙 이미지 객체 생성
     const centerImg = new Image();
     centerImg.crossOrigin = 'Anonymous'; // CORS 허용
-
-    // 이미지를 캔버스에 그리는 부분
-    const drawCentralImage = () => {
-        // 중앙 이미지 그리기 (여기서 centerImg는 캔버스의 내용을 의미)
-        context.drawImage(centerImg, 0, 0, centerImageWidth, centerImageHeight);
-    };
+    centerImg.src = image;
 
     centerImg.onload = () => {
-        // 중앙 이미지를 캔버스에 그리기
-        drawCentralImage();
+        // 중앙 이미지 그리기
+        context.drawImage(centerImg, 0, 0, centerImageWidth, centerImageHeight);
 
-        // 모든 이미지를 그리기 위한 Promise 배열
-        const imagePromises = [];
+        // 모든 추가 이미지 그리기 위한 Promise 배열
+        const imagePromises = centerImages.map(img => {
+            return new Promise((resolve) => {
+                const image = new Image();
+                image.crossOrigin = 'Anonymous'; // CORS 허용
+                image.src = img.src;
 
-        // 추가된 이미지 그리기
-        centerImages.forEach(img => {
-            const image = new Image();
-            image.crossOrigin = 'Anonymous'; // CORS 허용
-            image.src = img.src;
-
-            const promise = new Promise((resolve) => {
                 image.onload = () => {
-                    // 추가 이미지의 비율을 유지하며 그리기
                     const aspectRatio = image.width / image.height;
-                    
-                    // 설정된 너비를 기준으로 높이 계산
                     const newWidth = img.size.width; // 설정된 너비
                     const newHeight = newWidth / aspectRatio; // 비율에 따라 높이 계산
 
                     // 위치 조정
-                    const adjustedLeft = img.position.left; // 캔버스 크기에 맞춰 조정
-                    const adjustedTop = img.position.top; // 캔버스 크기에 맞춰 조정
+                    const adjustedLeft = img.position.left; 
+                    const adjustedTop = img.position.top; 
 
-                    // 추가 이미지 그리기
                     context.drawImage(image, adjustedLeft, adjustedTop, newWidth, newHeight);
                     resolve();
                 };
             });
-
-            imagePromises.push(promise);
         });
 
-        // 모든 이미지가 그려진 후, 데이터 URL로 변환
+        // 모든 이미지가 그려진 후 텍스트 그리기
         Promise.all(imagePromises).then(() => {
+            // 텍스트 그리기
+            drawTexts(context); // 기존 텍스트 그리기
+            drawLiveText(context); // 실시간 입력 중인 텍스트 그리기
+
+            // 데이터 URL로 변환
             const dataUrl = canvas.toDataURL('image/png');
             setCapturedImageUrl(dataUrl); // 상태 업데이트
             console.log("저장된 이미지 URL:", dataUrl); // 이미지 URL 출력
         });
     };
-    // 캔버스의 내용을 이미지로 설정 (중앙 이미지를 캔버스에서 직접 가져오기)
-    centerImg.src = canvas.toDataURL('image/png');
 };
+
 
 
 // 이미지 가져오기 로직 수정
