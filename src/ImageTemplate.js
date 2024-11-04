@@ -7,7 +7,7 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-modal';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 
 const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
@@ -37,26 +37,6 @@ function DraggableImage({ image }) {
     />
   );
 }
-
-// DraggableImage 컴포넌트에서의 이미지 URL 수정
-// function DraggableImage({ image }) {
-//   const [{ isDragging }, drag] = useDrag(() => ({
-//     type: ItemType.IMAGE,
-//     item: { src: image.image_url }, // Freepik API에서 사용하는 이미지 URL
-//     collect: (monitor) => ({
-//       isDragging: monitor.isDragging(),
-//     }),
-//   }));
-
-//   return (
-//     <img
-//       ref={drag}
-//       src={image.image_url} // Freepik API에서 사용하는 이미지 URL
-//       alt={image.title}
-//       style={{ ...styles.image, opacity: isDragging ? 0.5 : 1 }}
-//     />
-//   );
-// }
 
 function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
   const [size, setSize] = useState(img.size);
@@ -193,10 +173,9 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) 
         top: Math.max(0, Math.min(adjustedTop, centerImageHeight - 100)),
       };
 
-      // 기존 이미지가 있는지 확인
       const existingImage = centerImages.find(image => image.src === item.src);
       if (existingImage) {
-        // 기존 이미지의 위치만 업데이트
+        // 기존 이미지의 위치 업데이트
         setCenterImages(prev => 
           prev.map(image => 
             image.src === item.src ? { ...image, position: newPosition } : image
@@ -211,11 +190,10 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) 
           const originalWidth = newImage.width;
           const originalHeight = newImage.height;
 
-          // 원본 이미지의 크기를 기준으로 크기를 조정
-          const maxWidth = 200; // 최대 너비
-          const maxHeight = 300; // 최대 높이
+          // 크기 조정
+          const maxWidth = 200;
+          const maxHeight = 300;
 
-          // 비율 유지하며 크기 조정
           let newWidth, newHeight;
           if (originalWidth / originalHeight > maxWidth / maxHeight) {
             newWidth = Math.min(originalWidth, maxWidth);
@@ -235,7 +213,7 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) 
   }));
 
   const handleRemove = (src) => {
-    setCenterImages((prev) => prev.filter(image => image.src !== src));
+    setCenterImages(prev => prev.filter(image => image.src !== src));
   };
 
   return (
@@ -249,40 +227,194 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) 
       {centerImages.map((img, index) => (
         <ResizableImage
           key={index}
-          img={{ ...img, size: img.size || { width: 100, height: 100 } }}
+          img={img}
           onResize={(src, newSize) => {
             setCenterImages(prev => 
               prev.map(image => image.src === src ? { ...image, size: newSize } : image)
             );
           }}
-          onDrop={(src, position) => {
-            const centerOffset = document.getElementById('center-image').getBoundingClientRect();
-            const centerImageWidth = centerOffset.width;
-            const centerImageHeight = centerOffset.height;
-
-            const newPosition = {
-              left: Math.max(0, Math.min(position.left, centerImageWidth - img.size.width)),
-              top: Math.max(0, Math.min(position.top, centerImageHeight - img.size.height)),
-            };
-
-            setCenterImages(prev => 
-              prev.map(image => image.src === src ? { ...image, position: newPosition } : image)
-            );
-          }}
           onRemove={handleRemove}
-          onClick={onImageClick} // 클릭 핸들러 전달
+          onClick={onImageClick}
         />
       ))}
     </div>
   );
 };
 
-
-
-
-
-
 function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUrl 추가
+
+  //텍스트 관련
+  const location = useLocation();
+  const [image, setImage] = useState(location.state?.image?.src || null);
+  const [texts, setTexts] = useState([]);
+  const [currentText, setCurrentText] = useState('');
+  const [fontSize, setFontSize] = useState('24');
+  const [fontFamily, setFontFamily] = useState('Arial');
+  const [textColor, setTextColor] = useState('#000000');
+  const [fontWeight, setFontWeight] = useState('normal');
+  const [fontStyle, setFontStyle] = useState('normal');
+  const [textPosition, setTextPosition] = useState({ x: 50, y: 50 });
+  const [borderColor, setBorderColor] = useState('#000000');
+  const [borderWidth, setBorderWidth] = useState(1);
+  const [shadowColor, setShadowColor] = useState('#000000');
+  const [shadowBlur, setShadowBlur] = useState(0);
+  const [shadowOffsetX, setShadowOffsetX] = useState(0);
+  const [shadowOffsetY, setShadowOffsetY] = useState(0);
+  const CANVAS_WIDTH = 400;
+  const CANVAS_HEIGHT = 300;
+
+// 텍스트 추가 시 위치를 이미지 중앙으로 설정
+const addText = () => {
+  if (currentText.trim()) {
+    if (centerImages.length === 0) {
+      console.error("이미지가 없습니다. 텍스트를 추가할 수 없습니다.");
+      return; // 이미지가 없으면 텍스트 추가를 중단
+    }
+
+    const centerImage = centerImages[centerImages.length - 1]; // 가장 최근에 추가된 이미지
+    const centerX = centerImage.position.left + centerImage.size.width / 2;
+    const centerY = centerImage.position.top + centerImage.size.height / 2;
+
+    setTexts((prevTexts) => [
+      ...prevTexts,
+      {
+        text: currentText,
+        x: centerX,
+        y: centerY,
+        fontSize: fontSize,
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: fontWeight,
+        fontStyle: fontStyle,
+        backgroundColor: backgroundColor,
+        shadowColor: shadowColor,
+        shadowBlur: shadowBlur,
+        shadowOffsetX: shadowOffsetX,
+        shadowOffsetY: shadowOffsetY,
+      },
+    ]);
+    setCurrentText('');
+    setTextPosition({ x: 50, y: 50 }); // 초기화
+    setFontSize('24');
+    setFontFamily('Arial');
+    setTextColor('#000000');
+    setFontWeight('normal');
+    setFontStyle('normal');
+    setBackgroundColor('');
+    setShadowColor('transparent');
+    setShadowBlur(0);
+    setShadowOffsetX(0);
+    setShadowOffsetY(0);
+  }
+};
+
+  // 새로운 상태 추가
+const [backgroundColor, setBackgroundColor] = useState(''); // 초기값을 빈 문자열로 설정하여 배경색 없음
+
+const renderCanvasContent = () => {
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+  // 배경 이미지 렌더링
+  if (image) {
+    const img = new Image();
+    img.src = image;
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      drawTexts(ctx);  // 이미지 로드 후 기존 텍스트 렌더링
+      drawLiveText(ctx);  // 실시간 텍스트 렌더링
+    };
+  } else {
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    drawTexts(ctx);  // 이미지가 없을 때도 기존 텍스트 렌더링
+  }
+
+  drawLiveText(ctx);  // 항상 실시간 입력 중인 텍스트 렌더링
+};
+
+// drawTexts 함수 수정
+const drawTexts = (ctx) => {
+  texts.forEach(({ text, x, y, fontSize, fontFamily, color, fontWeight, fontStyle, backgroundColor, borderWidth, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY }) => {
+    ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+
+    // 배경색상 처리
+    if (backgroundColor) {
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(
+        x - borderWidth,
+        y - parseInt(fontSize),
+        ctx.measureText(text).width + 2 * borderWidth,
+        parseInt(fontSize) + 2 * borderWidth
+      );
+    }
+
+    // 텍스트 그림자 처리
+    ctx.shadowColor = shadowColor;
+    ctx.shadowBlur = shadowBlur;
+    ctx.shadowOffsetX = shadowOffsetX;
+    ctx.shadowOffsetY = shadowOffsetY;
+
+    // 텍스트 색상 및 렌더링
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+
+    // 그림자 초기화
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  });
+};
+
+// 실시간으로 입력 중인 텍스트를 렌더링
+const drawLiveText = (ctx) => {
+  if (currentText.trim()) {
+    ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+
+    // 배경색상 처리
+    if (backgroundColor) {
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(
+        textPosition.x - borderWidth,
+        textPosition.y - parseInt(fontSize),
+        ctx.measureText(currentText).width + 2 * borderWidth,
+        parseInt(fontSize) + 2 * borderWidth
+      );
+    }
+
+    // 텍스트 그림자 처리
+    ctx.shadowColor = shadowColor;
+    ctx.shadowBlur = shadowBlur;
+    ctx.shadowOffsetX = shadowOffsetX;
+    ctx.shadowOffsetY = shadowOffsetY;
+
+    // 텍스트 색상 및 렌더링
+    ctx.fillStyle = textColor;
+    ctx.fillText(currentText, textPosition.x, textPosition.y);
+
+
+    // 그림자 초기화
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  }
+};
+
+useEffect(() => {
+  if (location.state?.centerImage?.src) {
+    setImage(location.state.centerImage.src);
+  }
+}, [location.state]);
+
+useEffect(() => {
+  renderCanvasContent();
+}, [image, texts, currentText, textPosition, fontSize, fontFamily, textColor, fontWeight, fontStyle, backgroundColor, borderColor, borderWidth, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY]);
+
   const navigate = useNavigate();
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [username, setUsername] = useState('');
@@ -389,14 +521,6 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
       });
     };
   };
-  
-  
-  
-  
-  
-  
-  
-  
 
 // 이미지 가져오기 로직 수정
 const fetchImages = async () => {
@@ -449,34 +573,36 @@ const fetchImages = async () => {
     };
   }, []);
 
-  const onDrop = (src, position) => {
-    const newImage = new Image();
-    newImage.src = src;
-  
-    newImage.onload = () => {
-      const originalWidth = newImage.width;
-      const originalHeight = newImage.height;
-  
-      // 원본 이미지의 크기를 기준으로 크기를 조정
-      const maxWidth = 400; // 최대 너비
-      const maxHeight = 600; // 최대 높이
-  
-      // 비율 유지하며 크기 조정
-      let newWidth, newHeight;
-      if (originalWidth / originalHeight > maxWidth / maxHeight) {
-        newWidth = Math.min(originalWidth, maxWidth);
-        newHeight = (originalHeight / originalWidth) * newWidth;
-      } else {
-        newHeight = Math.min(originalHeight, maxHeight);
-        newWidth = (originalWidth / originalHeight) * newHeight;
-      }
-  
-      setCenterImages((prev) => [
-        ...prev,
-        { src, position, size: { width: newWidth, height: newHeight } },
-      ]);
-    };
+
+  // onDrop 함수 수정
+const onDrop = (src, position) => {
+  const newImage = new Image();
+  newImage.src = src;
+
+  newImage.onload = () => {
+    const originalWidth = newImage.width;
+    const originalHeight = newImage.height;
+
+    // 원본 이미지의 크기를 기준으로 크기를 조정
+    const maxWidth = 400; // 최대 너비
+    const maxHeight = 600; // 최대 높이
+
+    // 비율 유지하며 크기 조정
+    let newWidth, newHeight;
+    if (originalWidth / originalHeight > maxWidth / maxHeight) {
+      newWidth = Math.min(originalWidth, maxWidth);
+      newHeight = (originalHeight / originalWidth) * newWidth;
+    } else {
+      newHeight = Math.min(originalHeight, maxHeight);
+      newWidth = (originalWidth / originalHeight) * newHeight;
+    }
+
+    setCenterImages((prev) => [
+      ...prev,
+      { src, position, size: { width: newWidth, height: newHeight } },
+    ]);
   };
+};
   
 
   const handleImageClick = (src) => {
@@ -545,7 +671,95 @@ const renderContent = () => {
         </div>
       );
     case '텍스트':
-      return <div><h2>텍스트 입력 화면입니다.</h2></div>;
+      return   <div style={styles.textEditorContainer}>
+      <input 
+        type="text" 
+        value={currentText} 
+        onChange={(e) => setCurrentText(e.target.value)} 
+        placeholder="텍스트 입력" 
+        style={styles.textInput}
+      />
+    
+  
+      <div style={styles.inlineGroup}>
+        <label style={styles.label}>텍스트 색상:</label>
+        <input 
+          type="color" 
+          value={textColor} 
+          onChange={(e) => setTextColor(e.target.value)} 
+          style={styles.colorInput}
+        />
+        <label style={styles.label}>배경 색상:</label>
+        <input 
+          type="color" 
+          value={backgroundColor} 
+          onChange={(e) => setBackgroundColor(e.target.value)} 
+          style={styles.colorInput}
+        />
+      </div>
+  
+     
+  
+      <div style={styles.inlineGroup}>
+        <label style={styles.label}>그림자 색상:</label>
+        <input 
+          type="color" 
+          value={shadowColor} 
+          onChange={(e) => setShadowColor(e.target.value)} 
+          style={styles.colorInput}
+        />
+        <label style={styles.label}>그림자 블러:</label>
+        <input 
+          type="number" 
+          value={shadowBlur} 
+          onChange={(e) => setShadowBlur(e.target.value)} 
+          style={styles.numberInput}
+        />
+      </div>
+  
+  
+      <div style={styles.inlineGroup}>
+        <select value={fontWeight} onChange={(e) => setFontWeight(e.target.value)} style={styles.selectInput}>
+          <option value="normal">굵기</option>
+          <option value="bold">굵게</option>
+          <option value="lighter">얇게</option>
+        </select>
+        <label style={styles.checkboxLabel}>
+      <input
+        type="checkbox"
+        checked={fontStyle === 'italic'}
+        onChange={() => setFontStyle(fontStyle === 'italic' ? 'normal' : 'italic')}
+      />
+      기울임꼴
+    </label>
+      </div>
+  
+      <div style={styles.inlineGroup}>
+        <label style={styles.label}>X 위치:</label>
+        <input
+          type="range"
+          min="0"
+          max={CANVAS_WIDTH}
+          value={textPosition.x}
+          onChange={(e) => setTextPosition((prev) => ({ ...prev, x: parseInt(e.target.value) }))}
+          style={styles.rangeInput}
+        />
+      </div>
+      <div style={styles.inlineGroup}> {/* Y 위치 조절 바를 위한 새로운 div 추가 */}
+        <label style={styles.label}>Y 위치:</label>
+        <input
+          type="range"
+          min="0"
+          max={CANVAS_HEIGHT}
+          value={textPosition.y}
+          onChange={(e) => setTextPosition((prev) => ({ ...prev, y: parseInt(e.target.value) }))}
+          style={styles.rangeInput}
+        />
+      </div>
+
+  
+      <button onClick={addText} style={styles.addButton}>텍스트 추가</button>
+    </div>;
     case '이미지':
       return (
         <div>
@@ -703,7 +917,6 @@ const handleImageUpload = (event) => {
   );
 }
 
-
 // 사이드바 컴포넌트
 function Sidebar({ setActivePage }) {
   const buttons = [
@@ -769,7 +982,6 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-start',
-    
   },
   centerContainer: {
     width: '400px',
@@ -787,14 +999,14 @@ const styles = {
     width: '30%',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-around', // 'space-around'에서 'flex-start'로 변경
+    justifyContent: 'space-around',
   },
   sidebar: {
     display: 'flex',
     flexDirection: 'column',
   },
   optionButton: {
-    width: '60%',
+    width: '100%', // 60%에서 100%로 변경
     marginBottom: '10px',
     padding: '10px',
     backgroundColor: '#007bff',
@@ -802,7 +1014,6 @@ const styles = {
     border: 'none',
     borderRadius: '5px',
     cursor: 'pointer',
-    alignSelf: 'center',
   },
   inputField: {
     width: '100%',
@@ -864,7 +1075,73 @@ const styles = {
     width: '30%',
     marginBottom: '10px',
   },
+  textEditorContainer: {
+    backgroundColor: '#f9f9f9',
+    padding: '15px',
+    borderRadius: '10px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    marginBottom: '20px',
+  },
+  textInput: {
+    width: '100%',
+    padding: '10px',
+    marginBottom: '10px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+  },
+  numberInput: {
+    width: '70px',
+    padding: '5px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+  },
+  selectInput: {
+    padding: '5px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+    marginLeft: '10px',
+  },
+  colorInput: {
+    width: '40px',
+    height: '40px',
+    marginLeft: '10px',
+    border: 'none',
+  },
+  inlineGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: '10px',
+    gap: '10px', // 전체 요소 간의 간격
+  },
+  label: {
+    marginRight: '10px',
+    minWidth: '60px', // 라벨의 최소 너비로 정렬을 고르게 유지
+  },
+  rangeInput: {
+    width: '150px', // 슬라이더 너비 조정
+    marginLeft: '10px',
+  },
+  addButton: {
+    padding: '10px 20px',
+    backgroundColor: '#007BFF',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    marginTop: '10px',
+  },
+  navButtons: {
+    display: 'flex',
+    gap: '10px',
+  },
+  checkboxLabel: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '5px', // 체크박스와 텍스트 사이의 간격
+    whiteSpace: 'nowrap', // 텍스트 줄바꿈 방지
+  },
 };
+
 
 export default ImageTemplate;
 
