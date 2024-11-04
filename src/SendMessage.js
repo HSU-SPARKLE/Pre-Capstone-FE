@@ -6,7 +6,7 @@ import Button from 'react-bootstrap/Button'; // Button 컴포넌트 import
 import Modal from 'react-modal'; // Modal 컴포넌트 import
 import { Link, useNavigate } from 'react-router-dom'; // useNavigate 추가
 import './App.css'; // CSS 파일 import
-
+import axios from 'axios';
 
 function SendMessage() {
   const navigate = useNavigate(); // useNavigate 훅 사용
@@ -23,6 +23,8 @@ function SendMessage() {
     console.log('비밀번호:', password);
     closeModal();
   };
+
+  let userId = 1;
 
   const [description, setDescription] = useState('');
   const [keyword, setKeyword] = useState('');
@@ -47,31 +49,61 @@ function SendMessage() {
     setSeason(e.target.value);
   };
 
-  const handleImageGeneration = () => {
-    // AI 이미지 생성 기능 호출 예시
-    const newImages = [
-      { src: 'https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg', alt: 'Image 1' },
-      { src: 'https://img.animalplanet.co.kr/news/2023/07/26/700/yksc1o84507zi4691o1s.jpg', alt: 'Image 2' },
-      { src: 'https://i.namu.wiki/i/FTDAkOuqh6VP_iOGtJfHLHTf7jCIOhQ6LdU0Q_Y4TB3WvtIt1RBjKJfBVwAyUD6O0QVzdKlK5vXkGkMgexoPBBAirY-QAfJwb6BiqqbKOd4BmxPpM57OgjJxNa8CxJiAOsCOkVv7RIOhdA-8CYC8WA.webp', alt: 'Image 3' },
-    ];
-    setSelectedImages(newImages);
-    setShowRegenerateButton(true); // 이미지 생성 후 재생성 버튼 표시
+  const handleImageGeneration = async () => {
+    try {
+      const response = await axios.post(`http://localhost:8080/api/message/generate/${userId}`, {
+        inputMessage: description,
+        mood: category,
+        season: season,
+        keyWordMessage: [keyword],
+      });
+      
+      const newImages = Array.isArray(response.data.data.generatedImageUrls) && response.data.data.generatedImageUrls.length > 0
+      ? response.data.data.generatedImageUrls.map((url, index) => ({
+          src: url,
+          alt: `Generated Image ${index + 1}`
+        }))
+      : [
+          { src: 'https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg', alt: 'Image 1' },
+          { src: 'https://img.animalplanet.co.kr/news/2023/07/26/700/yksc1o84507zi4691o1s.jpg', alt: 'Image 2' },
+          { src: 'https://www.bing.com/th/id/OBTQ.BT84C6535BBA919E35ABD9E0BE70E8DA16B7FB33C3B7A576FB6F5361A70669C8BC?w=600&h=230&c=1&rs=1&qlt=90&pid=InlineBlock', alt: 'Image 3' },
+        ];
+  
+      setSelectedImages(newImages);
+      setShowRegenerateButton(true); // 이미지 생성 후 재생성 버튼 표시
+    } catch (error) {
+      console.error("이미지 생성 중 오류 발생:", error);
+    }
   };
 
-  const handleImageRegeneration = () => {
-    // 이미지 재생성 로직을 추가합니다.
-    const regeneratedImages = [
-      { src: 'https://blog.kakaocdn.net/dn/bvd1NP/btsFoctUnjD/spbSoDckKZTJno66EaDdCk/img.png', alt: 'New Image 1' },
-      { src: 'https://m.candlemano.com/web/product/big/202208/3f87090a39761a6d5ad10d09ff953e60.jpg', alt: 'New Image 2' },
-      { src: 'https://image.made-in-china.com/202f0j00aLlRpTervWqA/Colorful-Duck-Series-Bath-Duck-Toy-Floating-Duck-Baby-Bath-Duck-Kid-Duck.webp', alt: 'New Image 3' },
+  const handleImageRegeneration = async () => {
+    try {
+      const response = await axios.post(`http://localhost:8080/api/message/generate/${userId}`, {
+        inputMessage: description,
+        mood: category,
+        season: season,
+        keyWordMessage: [keyword],
+      });
+
+    const regeneratedImages= Array.isArray(response.data.data.generatedImageUrls) && response.data.data.generatedImageUrls.length > 0
+    ? response.data.data.generatedImageUrls.map((url, index) => ({
+        src: url,
+        alt: `Generated Image ${index + 1}`
+      }))
+      : [
+        { src: 'https://blog.kakaocdn.net/dn/bvd1NP/btsFoctUnjD/spbSoDckKZTJno66EaDdCk/img.png', alt: 'New Image 1' },
+        { src: 'https://m.candlemano.com/web/product/big/202208/3f87090a39761a6d5ad10d09ff953e60.jpg', alt: 'New Image 2' },
+        { src: 'https://image.made-in-china.com/202f0j00aLlRpTervWqA/Colorful-Duck-Series-Bath-Duck-Toy-Floating-Duck-Baby-Bath-Duck-Kid-Duck.webp', alt: 'New Image 3' },
     ];
     setSelectedImages(regeneratedImages);
+    } catch (error) {
+      console.error("이미지 생성 중 오류 발생:", error);
+    }
   };
 
   // 이미지 클릭 시 실행될 함수
 const handleImageClick = (image) => {
   console.log('클릭된 이미지:', image.alt);
-
   navigate('/image-template'); // 원하는 경로로 변경
 };
 
