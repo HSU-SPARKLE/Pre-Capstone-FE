@@ -1,0 +1,110 @@
+.header {
+    background-color: #fff;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 40px 100px;
+    color: #0055ff;
+    text-align: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    padding: 38px 60px;
+    font: 400 30px/1 ABeeZee, sans-serif;
+    border: 1px solid #b3adad;
+  }
+  
+  @media (max-width: 991px) {
+    .header {
+      padding: 0 20px;
+    }
+  }
+  
+  .logo {
+    align-self: stretch;
+    min-height: 89px;
+    gap: 20px;
+    font-size: 50px;
+    color: #000;
+    white-space: nowrap;
+    line-height: 1;
+    width: 214px;
+    margin: auto 0;
+  }
+  
+  @media (max-width: 991px) {
+    .logo {
+      font-size: 40px;
+      white-space: initial;
+    }
+  }
+  
+  .searchContainer {
+    align-self: stretch;
+    display: flex;
+    min-width: 240px;
+    flex-direction: column;
+    font-size: 18px;
+    color: #000;
+    line-height: 2;
+    justify-content: flex-start;
+    width: 355px;
+    margin: auto 0;
+  }
+  
+  .searchWrapper {
+    display: flex;
+    max-width: 100%;
+    width: 355px;
+    align-items: center;
+    gap: 40px 145px;
+    justify-content: flex-start;
+  }
+  
+  .searchPlaceholder {
+    align-self: stretch;
+    margin: auto 0;
+  }
+  
+  .searchIcon {
+    aspect-ratio: 1;
+    object-fit: contain;
+    object-position: center;
+    width: 24px;
+    align-self: stretch;
+    margin: auto 0;
+  }
+  
+  .searchBar {
+    aspect-ratio: 166.67;
+    object-fit: contain;
+    object-position: center;
+    width: 355px;
+    margin-top: 9px;
+    max-width: 100%;
+  }
+  
+  .navItem {
+    border-radius: 10px;
+    align-self: stretch;
+    display: flex;
+    min-width: 240px;
+    flex-direction: column;
+    width: 300px;
+    margin: auto 0;
+    padding: 10px 1px 0;
+  }
+  
+  .navButton {
+    transform: rotate(0.0018224764842074874rad);
+    border-radius: 10px;
+    background-color: #fff;
+    z-index: 10;
+    padding: 17px 30px;
+    border: 1px solid #0055ff;
+  }
+  
+  @media (max-width: 991px) {
+    .navButton {
+      padding: 0 20px;
+    }
+  }
