@@ -165,68 +165,28 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, ca
       const adjustedLeft = left - centerOffset.left;
       const adjustedTop = top - centerOffset.top;
 
-      const centerImageWidth = centerOffset.width;
-      const centerImageHeight = centerOffset.height;
-
       const newPosition = {
-        left: Math.max(0, Math.min(adjustedLeft, centerImageWidth - 100)),
-        top: Math.max(0, Math.min(adjustedTop, centerImageHeight - 100)),
+        left: Math.max(0, Math.min(adjustedLeft, centerOffset.width - 100)),
+        top: Math.max(0, Math.min(adjustedTop, centerOffset.height - 100)),
       };
 
-      const existingImage = centerImages.find(image => image.src === item.src);
-      if (existingImage) {
-        // 기존 이미지의 위치 업데이트
-        setCenterImages(prev => 
-          prev.map(image => 
-            image.src === item.src ? { ...image, position: newPosition } : image
-          )
-        );
-      } else {
-        // 새로운 이미지 추가
-        const newImage = new Image();
-        newImage.src = item.src;
-
-        newImage.onload = () => {
-          const originalWidth = newImage.width;
-          const originalHeight = newImage.height;
-
-          // 크기 조정
-          const maxWidth = 200;
-          const maxHeight = 300;
-
-          let newWidth, newHeight;
-          if (originalWidth / originalHeight > maxWidth / maxHeight) {
-            newWidth = Math.min(originalWidth, maxWidth);
-            newHeight = (originalHeight / originalWidth) * newWidth;
-          } else {
-            newHeight = Math.min(originalHeight, maxHeight);
-            newWidth = (originalWidth / originalHeight) * newHeight;
-          }
-
-          setCenterImages(prev => [
-            ...prev,
-            { src: item.src, position: newPosition, size: { width: newWidth, height: newHeight } }
-          ]);
-        };
-      }
+      // 드롭된 이미지 처리
+      onDrop(item.src, newPosition);
     },
   }));
 
   const handleRemove = (src) => {
-    
     setCenterImages(prev => prev.filter(image => image.src !== src));
   };
 
   return (
     <div ref={drop} style={styles.centerContainer}>
-
       <canvas
         ref={canvasRef}
         width={400}
         height={600}
         id="center-image"
-        className={centerImages}
-        />
+      />
         
       {centerImages.map((img, index) => (
         <ResizableImage
@@ -266,6 +226,15 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
   const [shadowOffsetY, setShadowOffsetY] = useState(0);
   const CANVAS_WIDTH = 400;
   const CANVAS_HEIGHT = 600;
+  const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파이 이름 저장
+
+  // 주소록 파일 업로드
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploadedFileName(file.name); // 선택한 파일 이름 설정
+    }
+  };
 
 // 텍스트 추가 시 위치를 이미지 중앙으로 설정
 const addText = () => {
@@ -577,34 +546,44 @@ const fetchImages = async () => {
 
 
   // onDrop 함수 수정
-const onDrop = (src, position) => {
-  const newImage = new Image();
-  newImage.src = src;
-
-  newImage.onload = () => {
-    const originalWidth = newImage.width;
-    const originalHeight = newImage.height;
-
-    // 원본 이미지의 크기를 기준으로 크기를 조정
-    const maxWidth = 400; // 최대 너비
-    const maxHeight = 600; // 최대 높이
-
-    // 비율 유지하며 크기 조정
-    let newWidth, newHeight;
-    if (originalWidth / originalHeight > maxWidth / maxHeight) {
-      newWidth = Math.min(originalWidth, maxWidth);
-      newHeight = (originalHeight / originalWidth) * newWidth;
-    } else {
-      newHeight = Math.min(originalHeight, maxHeight);
-      newWidth = (originalWidth / originalHeight) * newHeight;
-    }
-
-    setCenterImages((prev) => [
-      ...prev,
-      { src, position, size: { width: newWidth, height: newHeight } },
-    ]);
+  const onDrop = (src, position) => {
+    const newImage = new Image();
+    newImage.src = src;
+  
+    newImage.onload = () => {
+      const originalWidth = newImage.width;
+      const originalHeight = newImage.height;
+  
+      // 최대 크기 설정
+      const maxWidth = 200; // 원하는 최대 너비
+      const maxHeight = 300; // 원하는 최대 높이
+  
+      // 비율 유지하며 크기 조정
+      let newWidth, newHeight;
+      if (originalWidth / originalHeight > maxWidth / maxHeight) {
+        newWidth = Math.min(originalWidth, maxWidth);
+        newHeight = (originalHeight / originalWidth) * newWidth;
+      } else {
+        newHeight = Math.min(originalHeight, maxHeight);
+        newWidth = (originalWidth / originalHeight) * newHeight;
+      }
+  
+      // 상태 업데이트
+      setCenterImages(prev => {
+        const existingImage = prev.find(image => image.src === src);
+        if (existingImage) {
+          // 이미지가 이미 존재하면 위치만 업데이트
+          return prev.map(image => image.src === src ? { ...image, position } : image);
+        }
+        // 새로운 이미지 추가
+        return [...prev, { src, position, size: { width: newWidth, height: newHeight } }];
+      });
+    };
   };
-};
+  
+  
+  
+  
   
 
   const handleImageClick = (src) => {
@@ -673,7 +652,8 @@ const renderContent = () => {
         </div>
       );
     case '텍스트':
-      return   <div style={styles.textEditorContainer}>
+      return (
+      <div style={styles.textEditorContainer}>
       <input 
         type="text" 
         value={currentText} 
@@ -778,7 +758,7 @@ const renderContent = () => {
 
   
       <button onClick={addText} style={styles.addButton}>텍스트 추가</button>
-    </div>;
+    </div>); 
     case '이미지':
       return (
         <div>
@@ -866,15 +846,36 @@ const handleImageUpload = (event) => {
               placeholder="010-0000-0000"
               style={styles.inputField} 
             />
-            <button style={styles.button}>발신자 번호 등록</button>
+
             
             <h3>수신 주소록 선택</h3>
-            <select value={address} onChange={handleAddressChange} style={styles.selectField}>
+            <button style={styles.button} onClick={() => document.getElementById('file-upload').click()}>
+              주소록 업로드
+            </button>
+            <input 
+              id="file-upload" 
+              type="file" 
+              accept=".xls,.xlsx" 
+              onChange={handleFileUpload} 
+              style={{ display: 'none' }} // 숨김 처리
+            />
+            {uploadedFileName && <p style={styles.uploadedFileName}>{uploadedFileName}</p>} {/* 파일 이름 표시 */}
+
+            <input 
+              type="text" 
+              value={senderNumber} 
+              onChange={handleSenderNumberChange} 
+              placeholder="단일 발신번호 입력"
+              style={styles.inputField} 
+            />
+
+
+            {/* <select value={address} onChange={handleAddressChange} style={styles.selectField}>
               <option value="">주소록</option>
               <option value="서울">서울</option>
               <option value="부산">부산</option>
               <option value="대구">대구</option>
-            </select>
+            </select> */}
 
             <h3>발송 메시지</h3>
             <textarea 
@@ -887,9 +888,9 @@ const handleImageUpload = (event) => {
             <p>{message.length}/2000 byte</p>
 
             <div style={styles.buttonContainer}>
-              <button style={styles.smallButton}>즉시 발송</button>
+              {/* <button style={styles.smallButton}>즉시 발송</button>
               <button style={styles.smallButton}>예약 발송</button>
-              <button style={styles.smallButton}>테스트 발송</button>
+              <button style={styles.smallButton}>테스트 발송</button> */}
             </div>
 
             <button onClick={handleSendClick} style={styles.sendButton}>발송하기</button>
@@ -992,7 +993,7 @@ const styles = {
     overflow: 'hidden', // 전체 스크롤 방지
   },
   leftContainer: {
-    width: '15%',
+    width: '35%',
     paddingRight: '10px',
     display: 'flex',
     flexDirection: 'column',
@@ -1016,17 +1017,18 @@ const styles = {
     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)', // 그림자 추가
   },
   rightContainer: {
-    width: '30%',
+    width: '40%',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-around',
   },
   sidebar: {
+    width: '20%',
     display: 'flex',
     flexDirection: 'column',
   },
   optionButton: {
-    width: '100%', // 60%에서 100%로 변경
+    width: '100%',
     marginBottom: '10px',
     padding: '10px',
     backgroundColor: '#007bff',
