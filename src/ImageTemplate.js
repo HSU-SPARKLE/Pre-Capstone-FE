@@ -7,7 +7,7 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-modal';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 
 const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
@@ -37,26 +37,6 @@ function DraggableImage({ image }) {
     />
   );
 }
-
-// DraggableImage 컴포넌트에서의 이미지 URL 수정
-// function DraggableImage({ image }) {
-//   const [{ isDragging }, drag] = useDrag(() => ({
-//     type: ItemType.IMAGE,
-//     item: { src: image.image_url }, // Freepik API에서 사용하는 이미지 URL
-//     collect: (monitor) => ({
-//       isDragging: monitor.isDragging(),
-//     }),
-//   }));
-
-//   return (
-//     <img
-//       ref={drag}
-//       src={image.image_url} // Freepik API에서 사용하는 이미지 URL
-//       alt={image.title}
-//       style={{ ...styles.image, opacity: isDragging ? 0.5 : 1 }}
-//     />
-//   );
-// }
 
 function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
   const [size, setSize] = useState(img.size);
@@ -174,7 +154,7 @@ function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
 
 
 
-const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) => {
+const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, canvasRef }) => {
   const [, drop] = useDrop(() => ({
     accept: ItemType.IMAGE,
     drop: (item, monitor) => {
@@ -185,110 +165,242 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick }) 
       const adjustedLeft = left - centerOffset.left;
       const adjustedTop = top - centerOffset.top;
 
-      const centerImageWidth = centerOffset.width;
-      const centerImageHeight = centerOffset.height;
-
       const newPosition = {
-        left: Math.max(0, Math.min(adjustedLeft, centerImageWidth - 100)),
-        top: Math.max(0, Math.min(adjustedTop, centerImageHeight - 100)),
+        left: Math.max(0, Math.min(adjustedLeft, centerOffset.width - 100)),
+        top: Math.max(0, Math.min(adjustedTop, centerOffset.height - 100)),
       };
 
-      // 기존 이미지가 있는지 확인
-      const existingImage = centerImages.find(image => image.src === item.src);
-      if (existingImage) {
-        // 기존 이미지의 위치만 업데이트
-        setCenterImages(prev => 
-          prev.map(image => 
-            image.src === item.src ? { ...image, position: newPosition } : image
-          )
-        );
-      } else {
-        // 새로운 이미지 추가
-        const newImage = new Image();
-        newImage.src = item.src;
-
-        newImage.onload = () => {
-          const originalWidth = newImage.width;
-          const originalHeight = newImage.height;
-
-          // 원본 이미지의 크기를 기준으로 크기를 조정
-          const maxWidth = 200; // 최대 너비
-          const maxHeight = 300; // 최대 높이
-
-          // 비율 유지하며 크기 조정
-          let newWidth, newHeight;
-          if (originalWidth / originalHeight > maxWidth / maxHeight) {
-            newWidth = Math.min(originalWidth, maxWidth);
-            newHeight = (originalHeight / originalWidth) * newWidth;
-          } else {
-            newHeight = Math.min(originalHeight, maxHeight);
-            newWidth = (originalWidth / originalHeight) * newHeight;
-          }
-
-          setCenterImages(prev => [
-            ...prev,
-            { src: item.src, position: newPosition, size: { width: newWidth, height: newHeight } }
-          ]);
-        };
-      }
+      // 드롭된 이미지 처리
+      onDrop(item.src, newPosition);
     },
   }));
 
   const handleRemove = (src) => {
-    setCenterImages((prev) => prev.filter(image => image.src !== src));
+    setCenterImages(prev => prev.filter(image => image.src !== src));
   };
 
   return (
     <div ref={drop} style={styles.centerContainer}>
-      <img
+      <canvas
+        ref={canvasRef}
+        width={400}
+        height={600}
         id="center-image"
-        src="https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg"
-        alt="Center"
-        style={styles.centerImage}
       />
+        
       {centerImages.map((img, index) => (
         <ResizableImage
           key={index}
-          img={{ ...img, size: img.size || { width: 100, height: 100 } }}
+          img={img}
           onResize={(src, newSize) => {
             setCenterImages(prev => 
               prev.map(image => image.src === src ? { ...image, size: newSize } : image)
             );
           }}
-          onDrop={(src, position) => {
-            const centerOffset = document.getElementById('center-image').getBoundingClientRect();
-            const centerImageWidth = centerOffset.width;
-            const centerImageHeight = centerOffset.height;
-
-            const newPosition = {
-              left: Math.max(0, Math.min(position.left, centerImageWidth - img.size.width)),
-              top: Math.max(0, Math.min(position.top, centerImageHeight - img.size.height)),
-            };
-
-            setCenterImages(prev => 
-              prev.map(image => image.src === src ? { ...image, position: newPosition } : image)
-            );
-          }}
           onRemove={handleRemove}
-          onClick={onImageClick} // 클릭 핸들러 전달
+          onClick={onImageClick}
         />
       ))}
     </div>
   );
 };
 
-
-
-
-
-
 function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUrl 추가
+
+  //텍스트 관련
+  const location = useLocation();
+  const [image, setImage] = useState(location.state?.image?.src || null);
+  const [texts, setTexts] = useState([]);
+  const [currentText, setCurrentText] = useState('');
+  const [fontSize, setFontSize] = useState('24');
+  const [fontFamily, setFontFamily] = useState('Arial');
+  const [textColor, setTextColor] = useState('#000000');
+  const [fontWeight, setFontWeight] = useState('normal');
+  const [fontStyle, setFontStyle] = useState('normal');
+  const [textPosition, setTextPosition] = useState({ x: 50, y: 50 });
+  const [borderColor, setBorderColor] = useState('#000000');
+  const [borderWidth, setBorderWidth] = useState(1);
+  const [shadowColor, setShadowColor] = useState('#000000');
+  const [shadowBlur, setShadowBlur] = useState(0);
+  const [shadowOffsetX, setShadowOffsetX] = useState(0);
+  const [shadowOffsetY, setShadowOffsetY] = useState(0);
+  const CANVAS_WIDTH = 400;
+  const CANVAS_HEIGHT = 600;
+  const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파이 이름 저장
+  const [file, setFile] = useState(null); // 파일 상태 추가
+
+  // 주소록 파일 업로드
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFile(file);
+      setUploadedFileName(file.name); // 선택한 파일 이름 설정
+    }
+  };
+
+// 텍스트 추가 시 위치를 이미지 중앙으로 설정
+const addText = () => {
+  if (currentText.trim()) {
+    setTexts((prevTexts) => 
+      [...prevTexts, {
+        id: prevTexts.length, // 각 텍스트 항목에 고유한 ID를 할당
+        text: currentText,
+        x: textPosition.x,
+        y: textPosition.y,
+        fontSize: fontSize,
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: fontWeight,
+        fontStyle: fontStyle,
+        backgroundColor: backgroundColor,
+        shadowColor: shadowColor,
+        shadowBlur: shadowBlur,
+        shadowOffsetX: shadowOffsetX,
+        shadowOffsetY: shadowOffsetY,
+      }]
+    );
+
+    // 입력 필드 초기화
+    setCurrentText('');
+    setTextPosition({ x: 50, y: 50 });
+    setFontSize('24');
+    setFontFamily('Arial');
+    setTextColor('#000000');
+    setFontWeight('normal');
+    setFontStyle('normal');
+    setBackgroundColor('');
+    setShadowColor('transparent');
+    setShadowBlur(0);
+    setShadowOffsetX(0);
+    setShadowOffsetY(0);
+  }
+};
+
+  // 새로운 상태 추가
+const [backgroundColor, setBackgroundColor] = useState(''); // 초기값을 빈 문자열로 설정하여 배경색 없음
+
+const renderCanvasContent = () => {
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+
+  centerImages.forEach((img) => {
+    const image = new Image();
+    image.src = img.src;
+    image.onload = () => {
+      ctx.drawImage(image, img.position.left, img.position.top, img.size.width, img.size.height);
+    };
+  });
+  
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+
+  // 배경 이미지 렌더링
+  if (image) {
+    const img = new Image();
+    img.src = image;
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      drawTexts(ctx);  // 이미지 로드 후 기존 텍스트 렌더링
+      drawLiveText(ctx);  // 실시간 텍스트 렌더링
+    };
+  } else {
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    drawTexts(ctx);  // 이미지가 없을 때도 기존 텍스트 렌더링
+  }
+
+  drawLiveText(ctx);  // 항상 실시간 입력 중인 텍스트 렌더링
+};
+
+// drawTexts 함수 수정
+const drawTexts = (ctx) => {
+  texts.forEach((textObj) => {
+    const { text, x, y, fontSize, fontFamily, color, fontWeight, fontStyle, backgroundColor, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY } = textObj;
+    ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+    
+
+    // 배경색상 처리
+    if (backgroundColor) {
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(
+        x - 2,
+        y - parseInt(fontSize, 10),
+        ctx.measureText(text).width + 4,
+        parseInt(fontSize, 10) + 4
+      );
+    }
+
+    // 텍스트 그림자 처리
+    ctx.shadowColor = shadowColor;
+    ctx.shadowBlur = shadowBlur;
+    ctx.shadowOffsetX = shadowOffsetX;
+    ctx.shadowOffsetY = shadowOffsetY;
+
+    // 텍스트 색상 및 렌더링
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+
+    // 그림자 초기화
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  });
+};
+
+// 실시간으로 입력 중인 텍스트를 렌더링
+const drawLiveText = (ctx) => {
+  if (currentText.trim()) {
+    ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+
+    // 배경색상 처리
+    if (backgroundColor) {
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(
+        textPosition.x - borderWidth,
+        textPosition.y - parseInt(fontSize),
+        ctx.measureText(currentText).width + 2 * borderWidth,
+        parseInt(fontSize) + 2 * borderWidth
+      );
+    }
+
+    // 텍스트 그림자 처리
+    ctx.shadowColor = shadowColor;
+    ctx.shadowBlur = shadowBlur;
+    ctx.shadowOffsetX = shadowOffsetX;
+    ctx.shadowOffsetY = shadowOffsetY;
+
+    // 텍스트 색상 및 렌더링
+    ctx.fillStyle = textColor;
+    ctx.fillText(currentText, textPosition.x, textPosition.y);
+
+
+    // 그림자 초기화
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  }
+};
+
+useEffect(() => {
+  if (location.state && location.state.image) {
+    setImage(location.state.image);
+  }
+}, [location.state]);
+
+useEffect(() => {
+  renderCanvasContent();
+}, [image, texts, currentText, textPosition, fontSize, fontFamily, textColor, fontWeight, fontStyle, backgroundColor, borderColor, borderWidth, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY]);
+
   const navigate = useNavigate();
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [activePage, setActivePage] = useState('로고');
   const [senderNumber, setSenderNumber] = useState('');
+  const [testSendPhoneNumber, setTestSendPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   const [message, setMessage] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -314,89 +426,113 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
   };
 
   const handleSenderNumberChange = (e) => setSenderNumber(e.target.value);
+  const handleTestSendPhoneNumber = (e) => setTestSendPhoneNumber(e.target.value);
   const handleAddressChange = (e) => setAddress(e.target.value);
   const handleMessageChange = (e) => setMessage(e.target.value);
 
-  const handleSendClick = () => {
-    console.log("발신 번호:", senderNumber);
-    console.log("주소:", address);
-    console.log("메시지:", message);
+  const handleSendClick = async () => {
+    const userId = 1;
 
-      // 이미지 캡처 및 저장 기능
-    captureAndSaveImage();
+    try {
+        // 이미지 캡처 및 URL 생성
+        const dataUrl = await captureAndSaveImage();
+        console.log("캡처된 이미지 URL:", dataUrl);
 
-    navigate('/finish-send-message');
-  };
+        // 이미지 업로드 요청
+        const uploadDto = { base64Image: dataUrl };
+        const uploadResponse = await axios.post("http://localhost:8080/blob/uploadImageByUrl/body", uploadDto, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        console.log("이미지 업로드 응답 데이터:", uploadResponse.data);
 
-  // 이미지를 캡쳐하여 저장하는 함수
+        // 서버에서 응답받은 URL로 requestDto 생성
+        const requestDto = {
+            sendMessage: message,
+            completeImageURL: uploadResponse.data.imageUrl, // 수정된 부분
+            sendPhoneNumber: senderNumber,
+            testSendPhoneNumber: testSendPhoneNumber,
+            sendType: 0,
+            sendDateTime: "2024-11-04"
+        };
+        console.log(requestDto);
+
+        // FormData 객체 생성 및 requestDto와 파일 추가
+        const formData = new FormData();
+        formData.append("file", file); // 파일 추가
+        formData.append("requestDto", JSON.stringify(requestDto)); // JSON 객체를 문자열로 변환하여 추가
+
+        // FormData 내용 확인
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+
+        // 메시지 전송 요청
+        const response = await axios.post(`http://localhost:8080/api/message/send/${userId}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data", // 파일 전송을 위해 헤더 설정
+            }
+        });
+
+        console.log("전송 성공:", response.data);
+        navigate('/finish-send-message');
+    } catch (error) {
+        console.error("이미지 생성 중 오류 발생:", error);
+    }
+};
+
+  
+  // 이미지 캡쳐 및 저장하는 함수 (Promise를 반환하도록 설정)
   const captureAndSaveImage = () => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    return new Promise((resolve) => {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      const centerImageWidth = 400;
+      const centerImageHeight = 600;
   
-    // 중앙 이미지 크기
-    const centerImageWidth = 400;
-    const centerImageHeight = 600;
+      canvas.width = centerImageWidth;
+      canvas.height = centerImageHeight;
   
-    // 캔버스 크기를 중앙 이미지 크기로 설정
-    canvas.width = centerImageWidth;
-    canvas.height = centerImageHeight;
+      const centerImg = new Image();
+      centerImg.crossOrigin = 'Anonymous';
+      centerImg.src = image;
   
-    // 중앙 이미지 로드
-    const centerImg = new Image();
-    centerImg.crossOrigin = 'Anonymous'; // CORS 허용
-    centerImg.src = "https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg"; // 중앙 이미지 URL
+      centerImg.onload = () => {
+        context.drawImage(centerImg, 0, 0, centerImageWidth, centerImageHeight);
   
-    centerImg.onload = () => {
-      // 중앙 이미지 그리기
-      context.drawImage(centerImg, 0, 0, centerImageWidth, centerImageHeight);
+        const imagePromises = centerImages.map(img => {
+          return new Promise((resolve) => {
+            const image = new Image();
+            image.crossOrigin = 'Anonymous';
+            image.src = img.src;
   
-      // 모든 이미지를 그리기 위한 Promise 배열
-      const imagePromises = [];
+            image.onload = () => {
+              const aspectRatio = image.width / image.height;
+              const newWidth = img.size.width;
+              const newHeight = newWidth / aspectRatio;
+              const adjustedLeft = img.position.left;
+              const adjustedTop = img.position.top;
   
-      // 추가된 이미지 그리기
-      centerImages.forEach(img => {
-        const image = new Image();
-        image.crossOrigin = 'Anonymous'; // CORS 허용
-        image.src = img.src;
-  
-        const promise = new Promise((resolve) => {
-          image.onload = () => {
-            // 추가 이미지의 비율을 유지하며 그리기
-            const aspectRatio = image.width / image.height;
-            
-            // 설정된 너비를 기준으로 높이 계산
-            const newWidth = img.size.width; // 설정된 너비
-            const newHeight = newWidth / aspectRatio; // 비율에 따라 높이 계산
-  
-            // 위치 조정
-            const adjustedLeft = img.position.left; // 캔버스 크기에 맞춰 조정
-            const adjustedTop = img.position.top; // 캔버스 크기에 맞춰 조정
-  
-            // 추가 이미지 그리기
-            context.drawImage(image, adjustedLeft, adjustedTop, newWidth, newHeight);
-            resolve();
-          };
+              context.drawImage(image, adjustedLeft, adjustedTop, newWidth, newHeight);
+              resolve();
+            };
+          });
         });
   
-        imagePromises.push(promise);
-      });
+        Promise.all(imagePromises).then(() => {
+          drawTexts(context);
+          drawLiveText(context);
   
-      // 모든 이미지가 그려진 후, 데이터 URL로 변환
-      Promise.all(imagePromises).then(() => {
-        const dataUrl = canvas.toDataURL('image/png');
-        setCapturedImageUrl(dataUrl); // 상태 업데이트
-        console.log("저장된 이미지 URL:", dataUrl); // 이미지 URL 출력
-      });
-    };
-  };
-  
-  
-  
-  
-  
-  
-  
-  
+          const dataUrl = canvas.toDataURL('image/png');
+          setCapturedImageUrl(dataUrl);
+          resolve(dataUrl);
+        });
+      };
+    });
+  };  
+
+
 
 // 이미지 가져오기 로직 수정
 const fetchImages = async () => {
@@ -449,6 +585,8 @@ const fetchImages = async () => {
     };
   }, []);
 
+
+  // onDrop 함수 수정
   const onDrop = (src, position) => {
     const newImage = new Image();
     newImage.src = src;
@@ -457,9 +595,9 @@ const fetchImages = async () => {
       const originalWidth = newImage.width;
       const originalHeight = newImage.height;
   
-      // 원본 이미지의 크기를 기준으로 크기를 조정
-      const maxWidth = 400; // 최대 너비
-      const maxHeight = 600; // 최대 높이
+      // 최대 크기 설정
+      const maxWidth = 200; // 원하는 최대 너비
+      const maxHeight = 300; // 원하는 최대 높이
   
       // 비율 유지하며 크기 조정
       let newWidth, newHeight;
@@ -471,12 +609,22 @@ const fetchImages = async () => {
         newWidth = (originalWidth / originalHeight) * newHeight;
       }
   
-      setCenterImages((prev) => [
-        ...prev,
-        { src, position, size: { width: newWidth, height: newHeight } },
-      ]);
+      // 상태 업데이트
+      setCenterImages(prev => {
+        const existingImage = prev.find(image => image.src === src);
+        if (existingImage) {
+          // 이미지가 이미 존재하면 위치만 업데이트
+          return prev.map(image => image.src === src ? { ...image, position } : image);
+        }
+        // 새로운 이미지 추가
+        return [...prev, { src, position, size: { width: newWidth, height: newHeight } }];
+      });
     };
   };
+  
+  
+  
+  
   
 
   const handleImageClick = (src) => {
@@ -529,26 +677,136 @@ const fetchImages = async () => {
 
 // ImageTemplate 컴포넌트의 renderContent 함수 수정
 const renderContent = () => {
+  const contentStyle = {
+    width: '100%', // 최대 너비 설정
+    padding: '20px', // 내부 여백
+    margin: '0 auto', // 중앙 정렬
+    backgroundColor: '#fff', // 배경색
+    borderRadius: '8px', // 모서리 둥글게
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)', // 그림자 효과
+  };
+
   switch (activePage) {
     case '로고':
       return (
-        <div>
+        <div style={contentStyle}>
           <h2>로고 삽입 화면입니다.</h2>
           <input type="file" accept="image/*" onChange={handleImageUpload} />
         </div>
       );
     case 'QR 코드':
-            return (
-        <div>
+      return (
+        <div style={contentStyle}>
           <h2>QR 코드 삽입 화면입니다.</h2>
           <input type="file" accept="image/*" onChange={handleImageUpload} />
         </div>
       );
     case '텍스트':
-      return <div><h2>텍스트 입력 화면입니다.</h2></div>;
+      return (
+        <div style={{ ...contentStyle, ...styles.textEditorContainer }}>
+          <input 
+            type="text" 
+            value={currentText} 
+            onChange={(e) => setCurrentText(e.target.value)} 
+            placeholder="텍스트 입력" 
+            style={styles.textInput}
+          />
+          <div style={styles.inlineGroup}>
+            <input 
+              type="number" 
+              value={fontSize} 
+              onChange={(e) => setFontSize(e.target.value)} 
+              placeholder="글꼴 크기" 
+              style={styles.numberInput}
+            />
+            <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} style={styles.selectInput}>
+              <option value="Arial">Arial</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Verdana">Verdana</option>
+            </select>
+          </div>
+
+          <div style={styles.inlineGroup}>
+            <label style={styles.label}>텍스트 색상:</label>
+            <input 
+              type="color" 
+              value={textColor} 
+              onChange={(e) => setTextColor(e.target.value)} 
+              style={styles.colorInput}
+            />
+            <label style={styles.label}>배경 색상:</label>
+            <input 
+              type="color" 
+              value={backgroundColor} 
+              onChange={(e) => setBackgroundColor(e.target.value)} 
+              style={styles.colorInput}
+            />
+          </div>
+
+          <div style={styles.inlineGroup}>
+            <label style={styles.label}>그림자 색상:</label>
+            <input 
+              type="color" 
+              value={shadowColor} 
+              onChange={(e) => setShadowColor(e.target.value)} 
+              style={styles.colorInput}
+            />
+            <label style={styles.label}>그림자 블러:</label>
+            <input 
+              type="number" 
+              value={shadowBlur} 
+              onChange={(e) => setShadowBlur(e.target.value)} 
+              style={styles.numberInput}
+            />
+          </div>
+
+          <div style={styles.inlineGroup}>
+            <select value={fontWeight} onChange={(e) => setFontWeight(e.target.value)} style={styles.selectInput}>
+              <option value="normal">굵기</option>
+              <option value="bold">굵게</option>
+              <option value="lighter">얇게</option>
+            </select>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={fontStyle === 'italic'}
+                onChange={() => setFontStyle(fontStyle === 'italic' ? 'normal' : 'italic')}
+              />
+              기울임꼴
+            </label>
+          </div>
+
+          <div style={styles.inlineGroup}>
+            <label style={styles.label}>X 위치:</label>
+            <input
+              type="range"
+              min="0"
+              max={CANVAS_WIDTH}
+              value={textPosition.x}
+              onChange={(e) => setTextPosition((prev) => ({ ...prev, x: parseInt(e.target.value) }))}
+              style={styles.rangeInput}
+            />
+          </div>
+          <div style={styles.inlineGroup}>
+            <label style={styles.label}>Y 위치:</label>
+            <input
+              type="range"
+              min="0"
+              max={CANVAS_HEIGHT}
+              value={textPosition.y}
+              onChange={(e) => setTextPosition((prev) => ({ ...prev, y: parseInt(e.target.value) }))}
+              style={styles.rangeInput}
+            />
+          </div>
+
+          <button onClick={addText} style={styles.addButton}>텍스트 추가</button>
+        </div>
+      );
     case '이미지':
       return (
-        <div>
+        <div style={contentStyle}>
           <h2>이미지 삽입 화면입니다.</h2>
           <input 
             type="text" 
@@ -566,6 +824,13 @@ const renderContent = () => {
       );
     default:
       return null;
+  }
+};
+
+// Enter 키를 처리하는 이벤트 핸들러
+const handleSearchKeyDown = (e) => {
+  if (e.key === 'Enter') {
+    handleSearch(); // 검색 함수 호출
   }
 };
 
@@ -621,6 +886,7 @@ const handleImageUpload = (event) => {
             centerImages={centerImages} 
             setCenterImages={setCenterImages} 
             onImageClick={handleImageClick} // 클릭 핸들러 전달
+            canvasRef={canvasRef}
           />
 
           <div style={styles.rightContainer}>
@@ -632,15 +898,36 @@ const handleImageUpload = (event) => {
               placeholder="010-0000-0000"
               style={styles.inputField} 
             />
-            <button style={styles.button}>발신자 번호 등록</button>
+
             
             <h3>수신 주소록 선택</h3>
-            <select value={address} onChange={handleAddressChange} style={styles.selectField}>
+            <button style={styles.button} onClick={() => document.getElementById('file-upload').click()}>
+              주소록 업로드
+            </button>
+            <input 
+              id="file-upload" 
+              type="file" 
+              accept=".xls,.xlsx" 
+              onChange={handleFileUpload} 
+              style={{ display: 'none' }} // 숨김 처리
+            />
+            {uploadedFileName && <p style={styles.uploadedFileName}>{uploadedFileName}</p>} {/* 파일 이름 표시 */}
+
+            <input 
+              type="text" 
+              value={testSendPhoneNumber} 
+              onChange={handleTestSendPhoneNumber} 
+              placeholder="단일 수신번호 입력"
+              style={styles.inputField} 
+            />
+
+
+            {/* <select value={address} onChange={handleAddressChange} style={styles.selectField}>
               <option value="">주소록</option>
               <option value="서울">서울</option>
               <option value="부산">부산</option>
               <option value="대구">대구</option>
-            </select>
+            </select> */}
 
             <h3>발송 메시지</h3>
             <textarea 
@@ -653,9 +940,9 @@ const handleImageUpload = (event) => {
             <p>{message.length}/2000 byte</p>
 
             <div style={styles.buttonContainer}>
-              <button style={styles.smallButton}>즉시 발송</button>
+              {/* <button style={styles.smallButton}>즉시 발송</button>
               <button style={styles.smallButton}>예약 발송</button>
-              <button style={styles.smallButton}>테스트 발송</button>
+              <button style={styles.smallButton}>테스트 발송</button> */}
             </div>
 
             <button onClick={handleSendClick} style={styles.sendButton}>발송하기</button>
@@ -695,14 +982,13 @@ const handleImageUpload = (event) => {
           </button>
         </Modal>
 
-        <canvas ref={canvasRef} style={{ display: 'none' }} width={800} height={600}></canvas> {/* 캔버스 숨김 */}
+        
 
 
       </div>
     </DndProvider>
   );
 }
-
 
 // 사이드바 컴포넌트
 function Sidebar({ setActivePage }) {
@@ -755,21 +1041,17 @@ const styles = {
   appContainer: {
     display: 'flex',
     height: '100%',
-    padding: '20px',
     overflow: 'hidden', // 전체 스크롤 방지
   },
   leftContainer: {
-    width: '15%',
+    width: '10%',
     paddingRight: '10px',
-    display: 'flex',
-    flexDirection: 'column',
   },
   contentContainer: {
-    width: '20%',
+    width: '40%',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-start',
-    
   },
   centerContainer: {
     width: '400px',
@@ -784,17 +1066,18 @@ const styles = {
     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)', // 그림자 추가
   },
   rightContainer: {
-    width: '30%',
+    width: '40%',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-around', // 'space-around'에서 'flex-start'로 변경
+    justifyContent: 'space-around',
   },
   sidebar: {
+    width: '100%',
     display: 'flex',
     flexDirection: 'column',
   },
   optionButton: {
-    width: '60%',
+    width: '100%',
     marginBottom: '10px',
     padding: '10px',
     backgroundColor: '#007bff',
@@ -802,7 +1085,6 @@ const styles = {
     border: 'none',
     borderRadius: '5px',
     cursor: 'pointer',
-    alignSelf: 'center',
   },
   inputField: {
     width: '100%',
@@ -864,7 +1146,73 @@ const styles = {
     width: '30%',
     marginBottom: '10px',
   },
+  textEditorContainer: {
+    backgroundColor: '#f9f9f9',
+    padding: '15px',
+    borderRadius: '10px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    marginBottom: '20px',
+  },
+  textInput: {
+    width: '100%',
+    padding: '10px',
+    marginBottom: '10px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+  },
+  numberInput: {
+    width: '70px',
+    padding: '5px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+  },
+  selectInput: {
+    padding: '5px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+    marginLeft: '10px',
+  },
+  colorInput: {
+    width: '40px',
+    height: '40px',
+    marginLeft: '10px',
+    border: 'none',
+  },
+  inlineGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: '10px',
+    gap: '10px', // 전체 요소 간의 간격
+  },
+  label: {
+    marginRight: '10px',
+    minWidth: '60px', // 라벨의 최소 너비로 정렬을 고르게 유지
+  },
+  rangeInput: {
+    width: '150px', // 슬라이더 너비 조정
+    marginLeft: '10px',
+  },
+  addButton: {
+    padding: '10px 20px',
+    backgroundColor: '#007BFF',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    marginTop: '10px',
+  },
+  navButtons: {
+    display: 'flex',
+    gap: '10px',
+  },
+  checkboxLabel: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '5px', // 체크박스와 텍스트 사이의 간격
+    whiteSpace: 'nowrap', // 텍스트 줄바꿈 방지
+  },
 };
+
 
 export default ImageTemplate;
 
