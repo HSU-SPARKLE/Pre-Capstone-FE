@@ -432,90 +432,105 @@ useEffect(() => {
 
   const handleSendClick = async () => {
     const userId = 1;
-    const requestDto = {
-      "sendMessage": message,
-      "completeImageURL": captureAndSaveImage(canvasRef),
-      "sendPhoneNumber": "01099188389",
-      "testSendPhoneNumber": testSendPhoneNumber,
-      "sendType": 0,
-      "sendDateTime": "2024-11-04"
-    };
-
-    // FormData 객체 생성
-    const formData = new FormData();
-    formData.append("file", file); // 파일 추가
-    formData.append("requestDto", JSON.stringify(requestDto)); // JSON 객체를 문자열로 변환하여 추가
 
     try {
-      const response = await axios.post(`/api/message/send/${userId}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data", // 파일 전송을 위해 헤더 설정
-        },
-      });
-      console.log("전송 성공:", response.data);
-      navigate('/finish-send-message');
+        // 이미지 캡처 및 URL 생성
+        const dataUrl = await captureAndSaveImage();
+        console.log("캡처된 이미지 URL:", dataUrl);
+
+        // 이미지 업로드 요청
+        const uploadDto = { base64Image: dataUrl };
+        const uploadResponse = await axios.post("http://localhost:8080/blob/uploadImageByUrl/body", uploadDto, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        console.log("이미지 업로드 응답 데이터:", uploadResponse.data);
+
+        // 서버에서 응답받은 URL로 requestDto 생성
+        const requestDto = {
+            sendMessage: message,
+            completeImageURL: uploadResponse.data.imageUrl, // 수정된 부분
+            sendPhoneNumber: senderNumber,
+            testSendPhoneNumber: testSendPhoneNumber,
+            sendType: 0,
+            sendDateTime: "2024-11-04"
+        };
+        console.log(requestDto);
+
+        // FormData 객체 생성 및 requestDto와 파일 추가
+        const formData = new FormData();
+        formData.append("file", file); // 파일 추가
+        formData.append("requestDto", JSON.stringify(requestDto)); // JSON 객체를 문자열로 변환하여 추가
+
+        // FormData 내용 확인
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+
+        // 메시지 전송 요청
+        const response = await axios.post(`http://localhost:8080/api/message/send/${userId}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data", // 파일 전송을 위해 헤더 설정
+            }
+        });
+
+        console.log("전송 성공:", response.data);
+        navigate('/finish-send-message');
     } catch (error) {
-      console.error("이미지 생성 중 오류 발생:", error);
+        console.error("이미지 생성 중 오류 발생:", error);
     }
-  };
-
-  // 이미지를 캡쳐하여 저장하는 함수
-  const captureAndSaveImage = () => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-
-    // 중앙 이미지 크기 설정
-    const centerImageWidth = 400;
-    const centerImageHeight = 600;
-
-    // 캔버스 크기 설정
-    canvas.width = centerImageWidth;
-    canvas.height = centerImageHeight;
-
-    // 중앙 이미지 객체 생성
-    const centerImg = new Image();
-    centerImg.crossOrigin = 'Anonymous'; // CORS 허용
-    centerImg.src = image;
-
-    centerImg.onload = () => {
-        // 중앙 이미지 그리기
-        context.drawImage(centerImg, 0, 0, centerImageWidth, centerImageHeight);
-
-        // 모든 추가 이미지 그리기 위한 Promise 배열
-        const imagePromises = centerImages.map(img => {
-            return new Promise((resolve) => {
-                const image = new Image();
-                image.crossOrigin = 'Anonymous'; // CORS 허용
-                image.src = img.src;
-
-                image.onload = () => {
-                    const aspectRatio = image.width / image.height;
-                    const newWidth = img.size.width; // 설정된 너비
-                    const newHeight = newWidth / aspectRatio; // 비율에 따라 높이 계산
-
-                    // 위치 조정
-                    const adjustedLeft = img.position.left; 
-                    const adjustedTop = img.position.top; 
-
-                    context.drawImage(image, adjustedLeft, adjustedTop, newWidth, newHeight);
-                    resolve();
-                };
-            });
-        });
-
-        // 모든 이미지가 그려진 후 텍스트 그리기
-        Promise.all(imagePromises).then(() => {
-            // 텍스트 그리기
-            drawTexts(context); // 기존 텍스트 그리기
-            drawLiveText(context); // 실시간 입력 중인 텍스트 그리기
-
-            // 데이터 URL로 변환
-            const dataUrl = canvas.toDataURL('image/png');
-            setCapturedImageUrl(dataUrl); // 상태 업데이트
-            console.log("저장된 이미지 URL:", dataUrl); // 이미지 URL 출력
-        });
-    };
 };
+
+  
+  // 이미지 캡쳐 및 저장하는 함수 (Promise를 반환하도록 설정)
+  const captureAndSaveImage = () => {
+    return new Promise((resolve) => {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      const centerImageWidth = 400;
+      const centerImageHeight = 600;
+  
+      canvas.width = centerImageWidth;
+      canvas.height = centerImageHeight;
+  
+      const centerImg = new Image();
+      centerImg.crossOrigin = 'Anonymous';
+      centerImg.src = image;
+  
+      centerImg.onload = () => {
+        context.drawImage(centerImg, 0, 0, centerImageWidth, centerImageHeight);
+  
+        const imagePromises = centerImages.map(img => {
+          return new Promise((resolve) => {
+            const image = new Image();
+            image.crossOrigin = 'Anonymous';
+            image.src = img.src;
+  
+            image.onload = () => {
+              const aspectRatio = image.width / image.height;
+              const newWidth = img.size.width;
+              const newHeight = newWidth / aspectRatio;
+              const adjustedLeft = img.position.left;
+              const adjustedTop = img.position.top;
+  
+              context.drawImage(image, adjustedLeft, adjustedTop, newWidth, newHeight);
+              resolve();
+            };
+          });
+        });
+  
+        Promise.all(imagePromises).then(() => {
+          drawTexts(context);
+          drawLiveText(context);
+  
+          const dataUrl = canvas.toDataURL('image/png');
+          setCapturedImageUrl(dataUrl);
+          resolve(dataUrl);
+        });
+      };
+    });
+  };  
 
 
 

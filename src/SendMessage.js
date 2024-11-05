@@ -39,7 +39,7 @@ function SendMessage() {
   let userId = 1;
   const handleImageGeneration = async () => {
     try {
-      const response = await axios.post(`/api/message/generate/${userId}`, {
+      const response = await axios.post(`http://localhost:8080/api/message/generate/${userId}`, {
         inputMessage: description,
         mood: category,
         season: season,
