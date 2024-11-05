@@ -400,6 +400,7 @@ useEffect(() => {
   const [password, setPassword] = useState('');
   const [activePage, setActivePage] = useState('로고');
   const [senderNumber, setSenderNumber] = useState('');
+  const [testSendPhoneNumber, setTestSendPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   const [message, setMessage] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -425,6 +426,7 @@ useEffect(() => {
   };
 
   const handleSenderNumberChange = (e) => setSenderNumber(e.target.value);
+  const handleTestSendPhoneNumber = (e) => setTestSendPhoneNumber(e.target.value);
   const handleAddressChange = (e) => setAddress(e.target.value);
   const handleMessageChange = (e) => setMessage(e.target.value);
 
@@ -810,6 +812,12 @@ const renderContent = () => {
   }
 };
 
+// Enter 키를 처리하는 이벤트 핸들러
+const handleSearchKeyDown = (e) => {
+  if (e.key === 'Enter') {
+    handleSearch(); // 검색 함수 호출
+  }
+};
 
 // 로컬 이미지 업로드 핸들러 추가
 const handleImageUpload = (event) => {
@@ -892,9 +900,9 @@ const handleImageUpload = (event) => {
 
             <input 
               type="text" 
-              value={senderNumber} 
-              onChange={handleSenderNumberChange} 
-              placeholder="단일 발신번호 입력"
+              value={testSendPhoneNumber} 
+              onChange={handleTestSendPhoneNumber} 
+              placeholder="단일 수신번호 입력"
               style={styles.inputField} 
             />
 
