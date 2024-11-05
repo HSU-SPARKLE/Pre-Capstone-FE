@@ -239,21 +239,12 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
 // 텍스트 추가 시 위치를 이미지 중앙으로 설정
 const addText = () => {
   if (currentText.trim()) {
-    if (centerImages.length === 0) {
-      console.error("이미지가 없습니다. 텍스트를 추가할 수 없습니다.");
-      return; // 이미지가 없으면 텍스트 추가를 중단
-    }
-
-    const centerImage = centerImages[centerImages.length - 1]; // 가장 최근에 추가된 이미지
-    const centerX = centerImage.position.left + centerImage.size.width / 2;
-    const centerY = centerImage.position.top + centerImage.size.height / 2;
-
-    setTexts((prevTexts) => [
-      ...prevTexts,
-      {
+    setTexts((prevTexts) => 
+      [...prevTexts, {
+        id: prevTexts.length, // 각 텍스트 항목에 고유한 ID를 할당
         text: currentText,
-        x: centerX,
-        y: centerY,
+        x: textPosition.x,
+        y: textPosition.y,
         fontSize: fontSize,
         fontFamily: fontFamily,
         color: textColor,
@@ -264,10 +255,12 @@ const addText = () => {
         shadowBlur: shadowBlur,
         shadowOffsetX: shadowOffsetX,
         shadowOffsetY: shadowOffsetY,
-      },
-    ]);
+      }]
+    );
+
+    // 입력 필드 초기화
     setCurrentText('');
-    setTextPosition({ x: 50, y: 50 }); // 초기화
+    setTextPosition({ x: 50, y: 50 });
     setFontSize('24');
     setFontFamily('Arial');
     setTextColor('#000000');
@@ -288,8 +281,17 @@ const renderCanvasContent = () => {
   const canvas = canvasRef.current;
   if (!canvas) return;
 
+  centerImages.forEach((img) => {
+    const image = new Image();
+    image.src = img.src;
+    image.onload = () => {
+      ctx.drawImage(image, img.position.left, img.position.top, img.size.width, img.size.height);
+    };
+  });
+  
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
 
   // 배경 이미지 렌더링
   if (image) {
@@ -311,8 +313,10 @@ const renderCanvasContent = () => {
 
 // drawTexts 함수 수정
 const drawTexts = (ctx) => {
-  texts.forEach(({ text, x, y, fontSize, fontFamily, color, fontWeight, fontStyle, backgroundColor, borderWidth, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY }) => {
+  texts.forEach((textObj) => {
+    const { text, x, y, fontSize, fontFamily, color, fontWeight, fontStyle, backgroundColor, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY } = textObj;
     ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+    
 
     // 배경색상 처리
     if (backgroundColor) {
@@ -636,132 +640,136 @@ const fetchImages = async () => {
 
 // ImageTemplate 컴포넌트의 renderContent 함수 수정
 const renderContent = () => {
+  const contentStyle = {
+    width: '100%', // 최대 너비 설정
+    padding: '20px', // 내부 여백
+    margin: '0 auto', // 중앙 정렬
+    backgroundColor: '#fff', // 배경색
+    borderRadius: '8px', // 모서리 둥글게
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)', // 그림자 효과
+  };
+
   switch (activePage) {
     case '로고':
       return (
-        <div>
+        <div style={contentStyle}>
           <h2>로고 삽입 화면입니다.</h2>
           <input type="file" accept="image/*" onChange={handleImageUpload} />
         </div>
       );
     case 'QR 코드':
-            return (
-        <div>
+      return (
+        <div style={contentStyle}>
           <h2>QR 코드 삽입 화면입니다.</h2>
           <input type="file" accept="image/*" onChange={handleImageUpload} />
         </div>
       );
     case '텍스트':
       return (
-      <div style={styles.textEditorContainer}>
-      <input 
-        type="text" 
-        value={currentText} 
-        onChange={(e) => setCurrentText(e.target.value)} 
-        placeholder="텍스트 입력" 
-        style={styles.textInput}
-      />
+        <div style={{ ...contentStyle, ...styles.textEditorContainer }}>
+          <input 
+            type="text" 
+            value={currentText} 
+            onChange={(e) => setCurrentText(e.target.value)} 
+            placeholder="텍스트 입력" 
+            style={styles.textInput}
+          />
+          <div style={styles.inlineGroup}>
+            <input 
+              type="number" 
+              value={fontSize} 
+              onChange={(e) => setFontSize(e.target.value)} 
+              placeholder="글꼴 크기" 
+              style={styles.numberInput}
+            />
+            <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} style={styles.selectInput}>
+              <option value="Arial">Arial</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Verdana">Verdana</option>
+            </select>
+          </div>
 
-    <div style={styles.inlineGroup}>
-      <input 
-        type="number" 
-        value={fontSize} 
-        onChange={(e) => setFontSize(e.target.value)} 
-        placeholder="글꼴 크기" 
-        style={styles.numberInput}
-      />
-      <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} style={styles.selectInput}>
-        <option value="Arial">Arial</option>
-        <option value="Courier New">Courier New</option>
-        <option value="Georgia">Georgia</option>
-        <option value="Times New Roman">Times New Roman</option>
-        <option value="Verdana">Verdana</option>
-      </select>
-    </div>
-    
-  
-      <div style={styles.inlineGroup}>
-        <label style={styles.label}>텍스트 색상:</label>
-        <input 
-          type="color" 
-          value={textColor} 
-          onChange={(e) => setTextColor(e.target.value)} 
-          style={styles.colorInput}
-        />
-        <label style={styles.label}>배경 색상:</label>
-        <input 
-          type="color" 
-          value={backgroundColor} 
-          onChange={(e) => setBackgroundColor(e.target.value)} 
-          style={styles.colorInput}
-        />
-      </div>
-  
-     
-  
-      <div style={styles.inlineGroup}>
-        <label style={styles.label}>그림자 색상:</label>
-        <input 
-          type="color" 
-          value={shadowColor} 
-          onChange={(e) => setShadowColor(e.target.value)} 
-          style={styles.colorInput}
-        />
-        <label style={styles.label}>그림자 블러:</label>
-        <input 
-          type="number" 
-          value={shadowBlur} 
-          onChange={(e) => setShadowBlur(e.target.value)} 
-          style={styles.numberInput}
-        />
-      </div>
-  
-  
-      <div style={styles.inlineGroup}>
-        <select value={fontWeight} onChange={(e) => setFontWeight(e.target.value)} style={styles.selectInput}>
-          <option value="normal">굵기</option>
-          <option value="bold">굵게</option>
-          <option value="lighter">얇게</option>
-        </select>
-        <label style={styles.checkboxLabel}>
-      <input
-        type="checkbox"
-        checked={fontStyle === 'italic'}
-        onChange={() => setFontStyle(fontStyle === 'italic' ? 'normal' : 'italic')}
-      />
-      기울임꼴
-    </label>
-      </div>
-  
-      <div style={styles.inlineGroup}>
-        <label style={styles.label}>X 위치:</label>
-        <input
-          type="range"
-          min="0"
-          max={CANVAS_WIDTH}
-          value={textPosition.x}
-          onChange={(e) => setTextPosition((prev) => ({ ...prev, x: parseInt(e.target.value) }))}
-          style={styles.rangeInput}
-        />
-      </div>
-      <div style={styles.inlineGroup}> {/* Y 위치 조절 바를 위한 새로운 div 추가 */}
-        <label style={styles.label}>Y 위치:</label>
-        <input
-          type="range"
-          min="0"
-          max={CANVAS_HEIGHT}
-          value={textPosition.y}
-          onChange={(e) => setTextPosition((prev) => ({ ...prev, y: parseInt(e.target.value) }))}
-          style={styles.rangeInput}
-        />
-      </div>
+          <div style={styles.inlineGroup}>
+            <label style={styles.label}>텍스트 색상:</label>
+            <input 
+              type="color" 
+              value={textColor} 
+              onChange={(e) => setTextColor(e.target.value)} 
+              style={styles.colorInput}
+            />
+            <label style={styles.label}>배경 색상:</label>
+            <input 
+              type="color" 
+              value={backgroundColor} 
+              onChange={(e) => setBackgroundColor(e.target.value)} 
+              style={styles.colorInput}
+            />
+          </div>
 
-  
-      <button onClick={addText} style={styles.addButton}>텍스트 추가</button>
-    </div>); 
+          <div style={styles.inlineGroup}>
+            <label style={styles.label}>그림자 색상:</label>
+            <input 
+              type="color" 
+              value={shadowColor} 
+              onChange={(e) => setShadowColor(e.target.value)} 
+              style={styles.colorInput}
+            />
+            <label style={styles.label}>그림자 블러:</label>
+            <input 
+              type="number" 
+              value={shadowBlur} 
+              onChange={(e) => setShadowBlur(e.target.value)} 
+              style={styles.numberInput}
+            />
+          </div>
+
+          <div style={styles.inlineGroup}>
+            <select value={fontWeight} onChange={(e) => setFontWeight(e.target.value)} style={styles.selectInput}>
+              <option value="normal">굵기</option>
+              <option value="bold">굵게</option>
+              <option value="lighter">얇게</option>
+            </select>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={fontStyle === 'italic'}
+                onChange={() => setFontStyle(fontStyle === 'italic' ? 'normal' : 'italic')}
+              />
+              기울임꼴
+            </label>
+          </div>
+
+          <div style={styles.inlineGroup}>
+            <label style={styles.label}>X 위치:</label>
+            <input
+              type="range"
+              min="0"
+              max={CANVAS_WIDTH}
+              value={textPosition.x}
+              onChange={(e) => setTextPosition((prev) => ({ ...prev, x: parseInt(e.target.value) }))}
+              style={styles.rangeInput}
+            />
+          </div>
+          <div style={styles.inlineGroup}>
+            <label style={styles.label}>Y 위치:</label>
+            <input
+              type="range"
+              min="0"
+              max={CANVAS_HEIGHT}
+              value={textPosition.y}
+              onChange={(e) => setTextPosition((prev) => ({ ...prev, y: parseInt(e.target.value) }))}
+              style={styles.rangeInput}
+            />
+          </div>
+
+          <button onClick={addText} style={styles.addButton}>텍스트 추가</button>
+        </div>
+      );
     case '이미지':
       return (
-        <div>
+        <div style={contentStyle}>
           <h2>이미지 삽입 화면입니다.</h2>
           <input 
             type="text" 
@@ -781,6 +789,7 @@ const renderContent = () => {
       return null;
   }
 };
+
 
 // 로컬 이미지 업로드 핸들러 추가
 const handleImageUpload = (event) => {
@@ -989,17 +998,14 @@ const styles = {
   appContainer: {
     display: 'flex',
     height: '100%',
-    padding: '20px',
     overflow: 'hidden', // 전체 스크롤 방지
   },
   leftContainer: {
-    width: '35%',
+    width: '10%',
     paddingRight: '10px',
-    display: 'flex',
-    flexDirection: 'column',
   },
   contentContainer: {
-    width: '20%',
+    width: '40%',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-start',
@@ -1023,7 +1029,7 @@ const styles = {
     justifyContent: 'space-around',
   },
   sidebar: {
-    width: '20%',
+    width: '100%',
     display: 'flex',
     flexDirection: 'column',
   },
