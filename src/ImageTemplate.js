@@ -436,7 +436,7 @@ useEffect(() => {
       "sendMessage": message,
       "completeImageURL": captureAndSaveImage(canvasRef),
       "sendPhoneNumber": "01099188389",
-      "testSendPhoneNumber": senderNumber,
+      "testSendPhoneNumber": testSendPhoneNumber,
       "sendType": 0,
       "sendDateTime": "2024-11-04"
     };
