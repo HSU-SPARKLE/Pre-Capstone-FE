@@ -398,7 +398,7 @@ useEffect(() => {
   const [password, setPassword] = useState('');
   const [activePage, setActivePage] = useState('로고');
   const [senderNumber, setSenderNumber] = useState('');
-  const [ReceiveNumber, setReceiveNumber] = useState('');
+  const [testSendPhoneNumber, setTestSendPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   const [message, setMessage] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -424,6 +424,7 @@ useEffect(() => {
   };
 
   const handleSenderNumberChange = (e) => setSenderNumber(e.target.value);
+  const handleTestSendPhoneNumber = (e) => setTestSendPhoneNumber(e.target.value);
   const handleAddressChange = (e) => setAddress(e.target.value);
   const handleMessageChange = (e) => setMessage(e.target.value);
 
@@ -879,8 +880,8 @@ const handleImageUpload = (event) => {
 
             <input 
               type="text" 
-              value={ReceiveNumber} 
-              onChange={handleSenderNumberChange} 
+              value={testSendPhoneNumber} 
+              onChange={handleTestSendPhoneNumber} 
               placeholder="단일 수신번호 입력"
               style={styles.inputField} 
             />
