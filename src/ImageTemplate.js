@@ -227,11 +227,13 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
   const CANVAS_WIDTH = 400;
   const CANVAS_HEIGHT = 600;
   const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파이 이름 저장
+  const [file, setFile] = useState(null); // 파일 상태 추가
 
   // 주소록 파일 업로드
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setFile(file);
       setUploadedFileName(file.name); // 선택한 파일 이름 설정
     }
   };
@@ -426,15 +428,33 @@ useEffect(() => {
   const handleAddressChange = (e) => setAddress(e.target.value);
   const handleMessageChange = (e) => setMessage(e.target.value);
 
-  const handleSendClick = () => {
-    console.log("발신 번호:", senderNumber);
-    console.log("주소:", address);
-    console.log("메시지:", message);
+  const handleSendClick = async () => {
+    const userId = 1;
+    const requestDto = {
+      "sendMessage": message,
+      "completeImageURL": captureAndSaveImage(canvasRef),
+      "sendPhoneNumber": "01099188389",
+      "testSendPhoneNumber": senderNumber,
+      "sendType": 0,
+      "sendDateTime": "2024-11-04"
+    };
 
-      // 이미지 캡처 및 저장 기능
-    captureAndSaveImage(canvasRef);
+    // FormData 객체 생성
+    const formData = new FormData();
+    formData.append("file", file); // 파일 추가
+    formData.append("requestDto", JSON.stringify(requestDto)); // JSON 객체를 문자열로 변환하여 추가
 
-    navigate('/finish-send-message');
+    try {
+      const response = await axios.post(`/api/message/send/${userId}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data", // 파일 전송을 위해 헤더 설정
+        },
+      });
+      console.log("전송 성공:", response.data);
+      navigate('/finish-send-message');
+    } catch (error) {
+      console.error("이미지 생성 중 오류 발생:", error);
+    }
   };
 
   // 이미지를 캡쳐하여 저장하는 함수

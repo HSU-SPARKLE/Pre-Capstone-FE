@@ -6,6 +6,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-modal';
 import { Link, useNavigate } from 'react-router-dom';
 import './App.css';
+import axios from 'axios';
 
 function SendMessage() {
   const navigate = useNavigate();
@@ -35,17 +36,20 @@ function SendMessage() {
   const handleCategoryChange = (e) => setCategory(e.target.value);
   const handleSeasonChange = (e) => setSeason(e.target.value);
 
+  let userId = 1;
   const handleImageGeneration = () => {
+    // AI 이미지 생성 기능 호출 예시
     const newImages = [
       { src: 'https://cdn.insanmedicine.com/news/photo/202109/642_899_117.jpg', alt: 'Image 1' },
       { src: 'https://img.animalplanet.co.kr/news/2023/07/26/700/yksc1o84507zi4691o1s.jpg', alt: 'Image 2' },
       { src: 'https://i.namu.wiki/i/FTDAkOuqh6VP_iOGtJfHLHTf7jCIOhQ6LdU0Q_Y4TB3WvtIt1RBjKJfBVwAyUD6O0QVzdKlK5vXkGkMgexoPBBAirY-QAfJwb6BiqqbKOd4BmxPpM57OgjJxNa8CxJiAOsCOkVv7RIOhdA-8CYC8WA.webp', alt: 'Image 3' },
     ];
     setSelectedImages(newImages);
-    setShowRegenerateButton(true);
+    setShowRegenerateButton(true); // 이미지 생성 후 재생성 버튼 표시
   };
 
   const handleImageRegeneration = () => {
+    // 이미지 재생성 로직을 추가합니다.
     const regeneratedImages = [
       { src: 'https://blog.kakaocdn.net/dn/bvd1NP/btsFoctUnjD/spbSoDckKZTJno66EaDdCk/img.png', alt: 'New Image 1' },
       { src: 'https://m.candlemano.com/web/product/big/202208/3f87090a39761a6d5ad10d09ff953e60.jpg', alt: 'New Image 2' },
