@@ -226,7 +226,7 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
   const [shadowOffsetY, setShadowOffsetY] = useState(0);
   const CANVAS_WIDTH = 400;
   const CANVAS_HEIGHT = 600;
-  const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파이 이름 저장
+  const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파일 이름 저장
   const [file, setFile] = useState(null); // 파일 상태 추가
 
   // 주소록 파일 업로드
@@ -691,14 +691,14 @@ const renderContent = () => {
       return (
         <div style={contentStyle}>
           <h2>로고 삽입 화면입니다.</h2>
-          <input type="file" accept="image/*" onChange={handleImageUpload} />
+          <input type="file" accept="image/*" onChange={handleLogoImageUpload} />
         </div>
       );
     case 'QR 코드':
       return (
         <div style={contentStyle}>
           <h2>QR 코드 삽입 화면입니다.</h2>
-          <input type="file" accept="image/*" onChange={handleImageUpload} />
+          <input type="file" accept="image/*" onChange={handleQRImageUpload} />
         </div>
       );
     case '텍스트':
@@ -835,19 +835,35 @@ const handleSearchKeyDown = (e) => {
 };
 
 // 로컬 이미지 업로드 핸들러 추가
-const handleImageUpload = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const localImage = {
-        src: reader.result,
+const handleLogoImageUpload = (event) => {
+  const Logofile = event.target.files[0];
+  if (Logofile) {
+    const Logoreader = new FileReader();
+    Logoreader.onloadend = () => {
+      const localLogoImage = {
+        src: Logoreader.result,
         position: { left: 0, top: 0 },
         size: { width: 100, height: 100 }
       };
-      onDrop(localImage.src, localImage.position);
+      onDrop(localLogoImage.src, localLogoImage.position);
     };
-    reader.readAsDataURL(file);
+    Logoreader.readAsDataURL(Logofile);
+  }
+};
+
+const handleQRImageUpload = (event2) => {
+  const QRfile = event2.target.files[0];
+  if (QRfile) {
+    const QRreader = new FileReader();
+    QRreader.onloadend = () => {
+      const localQRImage = {
+        src: QRreader.result,
+        position: { left: 0, top: 0 },
+        size: { width: 100, height: 100 }
+      };
+      onDrop(localQRImage.src, localQRImage.position);
+    };
+    QRreader.readAsDataURL(QRfile);
   }
 };
 
@@ -1045,13 +1061,15 @@ const styles = {
   },
   leftContainer: {
     width: '10%',
-    paddingRight: '10px',
+    margin: '10px',
   },
   contentContainer: {
     width: '40%',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-start',
+    marginRight: '10px',
+    marginTop: '10px',
   },
   centerContainer: {
     width: '400px',
@@ -1059,6 +1077,8 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    marginRight: '10px',
+    marginTop: '10px',
   },
   centerImage: {
     width: '400px',
@@ -1070,6 +1090,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-around',
+    marginTop: '10px',
+    marginRight: '10px',
   },
   sidebar: {
     width: '100%',

@@ -56,13 +56,13 @@ function MainContent({ capturedImageUrl }) { // props로 capturedImageUrl 추가
               <img src={capturedImageUrl} alt="Promo" style={styles.promoImage} />
             )}
           </div>
-          <div style={styles.promoDetails}>
+          {/* <div style={styles.promoDetails}>
             <ul>
               <li style={styles.promoDetailItem}>발송일자: 2024-10-07</li>
               <li style={styles.promoDetailItem}>발신번호: 010-1234-5678</li>
               <li style={styles.promoDetailItem}>주소록 별칭: 한성대학교 대상 주소록</li>
             </ul>
-          </div>
+          </div> */}
         </div>
 
         <button className="custom-floating-button floating-button" onClick={openModal}>
