@@ -10,8 +10,9 @@ import Modal from 'react-modal';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 
+
+const REMOVE_BG_KEY = 'dkb2T1hFjHtEG9LkZVF3qq1i'
 const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
-// const FREEPIK_ACCESS_KEY = 'FPSX635f8874fb044212b7f4c1e2891f18e3'; // Freepik API 키
 
 
 const ItemType = {
@@ -38,121 +39,140 @@ function DraggableImage({ image }) {
   );
 }
 
-function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
+
+function ResizableImage({ img, onResize, onRemove, onClick }) {
   const [size, setSize] = useState(img.size);
   const [isHovered, setIsHovered] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [{ isDragging }, drag] = useDrag(() => ({
-    type: ItemType.IMAGE,
-    item: { src: img.src, position: img.position },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
+      type: ItemType.IMAGE,
+      item: { src: img.src, position: img.position },
+      collect: (monitor) => ({
+          isDragging: monitor.isDragging(),
+      }),
   }), [img.src, img.position]);
 
   const handleMouseDown = (e) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = size.width;
-    const startHeight = size.height;
+      e.preventDefault();
+      const startX = e.clientX;
+      const startWidth = size.width;
+      const aspectRatio = startWidth / size.height;
 
-    const aspectRatio = startWidth / startHeight; // 비율 저장
+      const handleMouseMove = (e) => {
+          const newWidth = Math.max(50, startWidth + (e.clientX - startX));
+          const newHeight = newWidth / aspectRatio;
 
-    const handleMouseMove = (e) => {
-      const newWidth = Math.max(50, startWidth + (e.clientX - startX));
-      const newHeight = newWidth / aspectRatio; // 비율 유지
+          const constrainedWidth = Math.min(newWidth, 400);
+          const constrainedHeight = Math.min(newHeight, 600);
 
-      // 최대 크기 제한
-      const constrainedWidth = Math.min(newWidth, 400);
-      const constrainedHeight = Math.min(newHeight, 600);
+          setSize({ width: constrainedWidth, height: constrainedHeight });
+          onResize(img.src, { width: constrainedWidth, height: constrainedHeight, src: img.src });
+      };
 
-      // 비율 유지하며 최대 크기 적용
-      if (constrainedWidth / aspectRatio <= 600) {
-        setSize({ width: constrainedWidth, height: constrainedWidth / aspectRatio });
-      } else {
-        setSize({ width: constrainedWidth, height: constrainedHeight });
+      const handleMouseUp = () => {
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleRemoveBackground = async () => {
+      setLoading(true);
+      try {
+          const response = await axios.post('https://api.remove.bg/v1.0/removebg', {
+              image_url: img.src,
+              size: 'auto',
+          }, {
+              headers: {
+                  'X-Api-Key': REMOVE_BG_KEY,
+                  'Content-Type': 'application/json',
+              },
+              responseType: 'blob',
+          });
+
+          const url = URL.createObjectURL(new Blob([response.data]));
+          onResize(img.src, { ...size, src: url }); // 배경 제거된 이미지로 업데이트
+      } catch (error) {
+          console.error("배경 제거 오류:", error);
+      } finally {
+          setLoading(false);
       }
-
-      onResize(img.src, { width: constrainedWidth, height: constrainedHeight });
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
   };
 
   return (
-    <div
-      ref={drag}
-      onClick={() => onClick(img.src)} // 이미지 클릭 시 호출
-      style={{
-        position: 'absolute',
-        display: 'inline-block',
-        left: img.position.left,
-        top: img.position.top,
-        opacity: isDragging ? 0.5 : 1,
-        boxShadow: isHovered ? '0 4px 10px rgba(0, 0, 0, 0.5)' : 'none',
-        overflow: 'hidden',
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <img
-        src={img.src}
-        alt="Dropped Image"
-        style={{
-          width: size.width,
-          height: size.height,
-          position: 'relative',
-        }}
-      />
       <div
-        onMouseDown={handleMouseDown}
-        style={{
-          position: 'absolute',
-          right: 0,
-          bottom: 0,
-          width: '20px',
-          height: '20px',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          cursor: 'nwse-resize',
-          opacity: isHovered ? 1 : 0,
-          visibility: isHovered ? 'visible' : 'hidden',
-          transition: 'opacity 0.3s ease',
-        }}
-      />
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove(img.src);
-        }}
-        style={{
-          position: 'absolute',
-          top: '5px',
-          right: '5px',
-          backgroundColor: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          color: 'black',
-          fontSize: '20px',
-          opacity: isHovered ? 1 : 0,
-          visibility: isHovered ? 'visible' : 'hidden',
-          transition: 'opacity 0.3s ease',
-        }}
+          ref={drag}
+          onClick={() => onClick(img.src)}
+          style={{
+              position: 'absolute',
+              left: img.position.left,
+              top: img.position.top,
+              opacity: isDragging ? 0.5 : 1,
+          }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
       >
-        &times;
-      </button>
-    </div>
+          <img
+              src={img.src}
+              alt="Dropped Image"
+              style={{
+                  width: size.width,
+                  height: size.height,
+              }}
+          />
+          <div
+              onMouseDown={handleMouseDown}
+              style={{
+                  position: 'absolute',
+                  right: 0,
+                  bottom: 0,
+                  width: '20px',
+                  height: '20px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  cursor: 'nwse-resize',
+                  opacity: isHovered ? 1 : 0,
+              }}
+          />
+          {/* 삭제 버튼 */}
+          {isHovered && (
+              <button onClick={() => onRemove(img.src)} style={{ 
+                  position: 'absolute', 
+                  top: '5px', 
+                  right: '5px', 
+                  backgroundColor: 'transparent', 
+                  border: 'none', 
+                  cursor: 'pointer', 
+                  color: 'black', 
+                  fontSize: '20px' 
+              }}>
+                  &times;
+              </button>
+          )}
+          {/* 배경 제거 버튼 */}
+          {isHovered && (
+              <button
+                  onClick={handleRemoveBackground}
+                  style={{
+                      position: 'absolute',
+                      bottom: '5px',
+                      left: '5px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '5px',
+                      borderRadius: '5px',
+                  }}
+                  disabled={loading}
+              >
+                  {loading ? '처리 중...' : '배경 제거'}
+              </button>
+          )}
+      </div>
   );
 }
-
-
-
 
 const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, canvasRef }) => {
   const [, drop] = useDrop(() => ({
@@ -192,11 +212,12 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, ca
         <ResizableImage
           key={index}
           img={img}
-          onResize={(src, newSize) => {
+          onResize={(src, newImage) => {
             setCenterImages(prev => 
-              prev.map(image => image.src === src ? { ...image, size: newSize } : image)
+                prev.map(image => image.src === src ? { ...image, src: newImage.src, size: newImage } : image)
             );
-          }}
+        }}
+      
           onRemove={handleRemove}
           onClick={onImageClick}
         />
@@ -534,7 +555,7 @@ useEffect(() => {
 
 
 
-// 이미지 가져오기 로직 수정
+// 이미지 가져오기
 const fetchImages = async () => {
   try {
     const response = await axios.get(`https://api.unsplash.com/search/photos`, {
@@ -586,7 +607,6 @@ const fetchImages = async () => {
   }, []);
 
 
-  // onDrop 함수 수정
   const onDrop = (src, position) => {
     const newImage = new Image();
     newImage.src = src;
@@ -609,7 +629,6 @@ const fetchImages = async () => {
         newWidth = (originalWidth / originalHeight) * newHeight;
       }
   
-      // 상태 업데이트
       setCenterImages(prev => {
         const existingImage = prev.find(image => image.src === src);
         if (existingImage) {
@@ -632,6 +651,8 @@ const fetchImages = async () => {
   };
 
   const handleKeyDown = (e) => {
+    console.log("눌린 키:", e.key); // 로그 추가
+  
     if (selectedImage) {
       const centerOffset = document.getElementById('center-image').getBoundingClientRect();
       const centerImageWidth = centerOffset.width;
@@ -650,15 +671,16 @@ const fetchImages = async () => {
                 newPosition.top = Math.min(centerImageHeight - image.size.height, newPosition.top + 5);
                 break;
               case 'ArrowLeft':
-                newPosition.left = Math.max(0, newPosition.left - 5); // 왼쪽 경계
+                newPosition.left = Math.max(0, newPosition.left - 5);
                 break;
               case 'ArrowRight':
-                newPosition.left = Math.min(centerImageWidth - image.size.width, newPosition.left + 5); // 오른쪽 경계
+                newPosition.left = Math.min(centerImageWidth - image.size.width, newPosition.left + 5);
                 break;
               default:
                 break;
             }
   
+            console.log("이동 후 위치:", newPosition); // 로그 추가
             return { ...image, position: newPosition };
           }
           return image;
@@ -666,6 +688,8 @@ const fetchImages = async () => {
       );
     }
   };
+  
+
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -808,17 +832,31 @@ const renderContent = () => {
       return (
         <div style={contentStyle}>
           <h2>이미지 삽입 화면입니다.</h2>
-          <input 
-            type="text" 
-            value={searchKeyword} 
-            onChange={(e) => setSearchKeyword(e.target.value)} 
-            placeholder="검색 키워드 입력"
-          />
-          <button onClick={handleSearch}>검색</button>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+            <input 
+              type="text" 
+              value={searchKeyword} 
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearch(); // 엔터 키가 눌리면 검색 함수 호출
+                }
+              }} 
+              placeholder="검색 키워드 입력" 
+              style={{ marginRight: '8px', width: '70%' }} // 원하는 너비로 조절
+            />
+            <button onClick={handleSearch} style={styles.searchButton}>검색</button>
+          </div>
+
+
           <div ref={galleryRef} style={styles.imageGallery}>
-            {images.map((image) => (
-              <DraggableImage key={image.id} image={image} />
-            ))}
+          {images.map((image, index) => (
+            <DraggableImage 
+              key={`${image.urls.small}-${index}`} // URL과 인덱스를 조합하여 고유 키 생성
+              image={image} 
+            />
+          ))}
+
           </div>
         </div>
       );
@@ -1222,6 +1260,14 @@ const styles = {
     borderRadius: '5px',
     cursor: 'pointer',
     marginTop: '10px',
+  },
+  searchButton: {
+    padding: '10px 20px',
+    backgroundColor: '#007BFF',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
   },
   navButtons: {
     display: 'flex',
