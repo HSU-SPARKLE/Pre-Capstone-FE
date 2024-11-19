@@ -247,12 +247,12 @@ const styles = {
     marginTop: '10px',
   },
   leftSection: {
-    width: '50%',
+    width: '40%',
     paddingRight: '20px',
     borderRight: '1px solid #ccc',
   },
   rightSection: {
-    width: '50%',
+    width: '60%',
     paddingLeft: '20px',
   },
   textArea: {
