@@ -34,15 +34,6 @@ function MainContent({ capturedImageUrl }) { // props로 capturedImageUrl 추가
       <Navbar className="custom-navbar" style={styles.navbar}>
         <Navbar.Brand className='custom-text-black' href="/">SPARKLE</Navbar.Brand>
         <Nav className="me-auto">
-          <Link to="/send-message">
-            <Button className="custom-button nav-link-spacing">문자 보내기</Button>
-          </Link>
-          <Link to="/message-history">
-            <Button className="custom-button nav-link-spacing">문자 내역 보기</Button>
-          </Link>
-          <Link to="/address-book-manage">
-            <Button className="custom-button nav-link-spacing">주소록 관리</Button>
-          </Link>
         </Nav>
       </Navbar>
 
@@ -65,7 +56,7 @@ function MainContent({ capturedImageUrl }) { // props로 capturedImageUrl 추가
           </div> */}
         </div>
 
-        <button className="custom-floating-button floating-button" onClick={openModal}>
+        {/* <button className="custom-floating-button floating-button" onClick={openModal}>
           {'<<'}
         </button>
 
@@ -96,7 +87,7 @@ function MainContent({ capturedImageUrl }) { // props로 capturedImageUrl 추가
           <button className="custom-login-button" onClick={handleLogin}>
             로그인
           </button>
-        </Modal>
+        </Modal> */}
       </div>
     </div>
   );

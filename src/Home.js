@@ -28,7 +28,7 @@ function Home() {
         <Container fluid>
           <Navbar.Brand className='custom-text-black' href="/">SPARKLE</Navbar.Brand>
           <Nav className="me-auto">
-            <Link to="/send-message">
+            {/* <Link to="/send-message">
               <button style={styles.customButton}>문자 보내기</button>
             </Link>
             <Link to="/message-history">
@@ -36,7 +36,7 @@ function Home() {
             </Link>
             <Link to="/address-book-manage">
               <button style={styles.customButton}>주소록 관리</button>
-            </Link>
+            </Link> */}
           </Nav>
         </Container>
       </Navbar>
@@ -45,11 +45,12 @@ function Home() {
 
       <div style={styles.container}>
       <br />
-      <h1>SPARKLE</h1>
+      <h1 style={{ fontWeight: 'bold' }}>SPARKLE : </h1>
+      <h2 style={{ fontWeight: 'bold' }}> 이미지 템플릿 기능을 통한 커스텀 이미지 생성 후 발송하기 </h2>
       <Link to="/send-message">
-        <button style={styles.customButton}>문자 보내기 화면으로 이동</button>
+        <button style={styles.customButton}>시작하기!</button>
       </Link>
-      <Link to="/AI-chatbot">
+      {/* <Link to="/AI-chatbot">
         <button style={styles.customButton}>AI ChatBot 화면으로 이동</button>
       </Link>
       <Link to="/message-history">
@@ -57,9 +58,9 @@ function Home() {
       </Link>
       <Link to="/mypage">
         <button style={styles.customButton}>마이 페이지로 이동</button>
-      </Link>
+      </Link> */}
 
-      <button style={styles.customFloatingButton} onClick={openModal}>
+      {/* <button style={styles.customFloatingButton} onClick={openModal}>
         {'<<'}
       </button>
 
@@ -90,7 +91,7 @@ function Home() {
         <button style={styles.customLoginButton} onClick={handleLogin}>
           로그인
         </button>
-      </Modal>
+      </Modal> */}
     </div>
     </div>
   );

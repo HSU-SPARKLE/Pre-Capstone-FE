@@ -41,138 +41,142 @@ function DraggableImage({ image }) {
 
 
 function ResizableImage({ img, onResize, onRemove, onClick }) {
-  const [size, setSize] = useState(img.size);
-  const [isHovered, setIsHovered] = useState(false);
-  const [loading, setLoading] = useState(false);
+    const [size, setSize] = useState(img.size);
+    const [isHovered, setIsHovered] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-  const [{ isDragging }, drag] = useDrag(() => ({
-      type: ItemType.IMAGE,
-      item: { src: img.src, position: img.position },
-      collect: (monitor) => ({
-          isDragging: monitor.isDragging(),
-      }),
-  }), [img.src, img.position]);
+    const [{ isDragging }, drag] = useDrag(() => ({
+        type: ItemType.IMAGE,
+        item: { src: img.src, position: img.position },
+        collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
+        }),
+    }), [img.src, img.position]);
 
-  const handleMouseDown = (e) => {
-      e.preventDefault();
-      const startX = e.clientX;
-      const startWidth = size.width;
-      const aspectRatio = startWidth / size.height;
+    const handleMouseDown = (e) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = size.width;
+        const aspectRatio = startWidth / size.height;
 
-      const handleMouseMove = (e) => {
-          const newWidth = Math.max(50, startWidth + (e.clientX - startX));
-          const newHeight = newWidth / aspectRatio;
+        const handleMouseMove = (e) => {
+            const newWidth = Math.max(50, startWidth + (e.clientX - startX));
+            const newHeight = newWidth / aspectRatio;
 
-          const constrainedWidth = Math.min(newWidth, 600);
-          const constrainedHeight = Math.min(newHeight, 800);
+            const constrainedWidth = Math.min(newWidth, 600);
+            const constrainedHeight = Math.min(newHeight, 800);
 
-          setSize({ width: constrainedWidth, height: constrainedHeight });
-          onResize(img.src, { width: constrainedWidth, height: constrainedHeight, src: img.src });
-      };
+            setSize({ width: constrainedWidth, height: constrainedHeight });
+            onResize(img.src, { width: constrainedWidth, height: constrainedHeight, src: img.src });
+        };
 
-      const handleMouseUp = () => {
-          document.removeEventListener('mousemove', handleMouseMove);
-          document.removeEventListener('mouseup', handleMouseUp);
-      };
+        const handleMouseUp = () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
 
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-  };
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    };
 
-  const handleRemoveBackground = async () => {
-      setLoading(true);
-      try {
-          const response = await axios.post('https://api.remove.bg/v1.0/removebg', {
-              image_url: img.src,
-              size: 'auto',
-          }, {
-              headers: {
-                  'X-Api-Key': REMOVE_BG_KEY,
-                  'Content-Type': 'application/json',
-              },
-              responseType: 'blob',
-          });
+    const handleRemoveBackground = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.post('https://api.remove.bg/v1.0/removebg', {
+                image_url: img.src,
+                size: 'auto',
+            }, {
+                headers: {
+                    'X-Api-Key': REMOVE_BG_KEY,
+                    'Content-Type': 'application/json',
+                },
+                responseType: 'blob',
+            });
 
-          const url = URL.createObjectURL(new Blob([response.data]));
-          onResize(img.src, { ...size, src: url }); // 배경 제거된 이미지로 업데이트
-      } catch (error) {
-          console.error("배경 제거 오류:", error);
-      } finally {
-          setLoading(false);
-      }
-  };
+            const url = URL.createObjectURL(new Blob([response.data]));
+            onResize(img.src, { ...size, src: url }); // 배경 제거된 이미지로 업데이트
+        } catch (error) {
+            console.error("배경 제거 오류:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  return (
-      <div
-          ref={drag}
-          onClick={() => onClick(img.src)}
-          style={{
-              position: 'absolute',
-              left: img.position.left,
-              top: img.position.top,
-              opacity: isDragging ? 0.5 : 1,
-          }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-      >
-          <img
-              src={img.src}
-              alt="Dropped Image"
-              style={{
-                  width: size.width,
-                  height: size.height,
-              }}
-          />
-          <div
-              onMouseDown={handleMouseDown}
-              style={{
-                  position: 'absolute',
-                  right: 0,
-                  bottom: 0,
-                  width: '20px',
-                  height: '20px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  cursor: 'nwse-resize',
-                  opacity: isHovered ? 1 : 0,
-              }}
-          />
-          {/* 삭제 버튼 */}
-          {isHovered && (
-              <button onClick={() => onRemove(img.src)} style={{ 
-                  position: 'absolute', 
-                  top: '5px', 
-                  right: '5px', 
-                  backgroundColor: 'transparent', 
-                  border: 'none', 
-                  cursor: 'pointer', 
-                  color: 'black', 
-                  fontSize: '20px' 
-              }}>
-                  &times;
-              </button>
-          )}
-          {/* 배경 제거 버튼 */}
-          {isHovered && (
-              <button
-                  onClick={handleRemoveBackground}
-                  style={{
-                      position: 'absolute',
-                      bottom: '5px',
-                      left: '5px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: '5px',
-                      borderRadius: '5px',
-                  }}
-                  disabled={loading}
-              >
-                  {loading ? '처리 중...' : '배경 제거'}
-              </button>
-          )}
-      </div>
-  );
+    return (
+        <div
+            ref={drag}
+            onClick={() => onClick(img.src)}
+            style={{
+                position: 'absolute',
+                left: img.position.left,
+                top: img.position.top,
+                opacity: isDragging ? 0.5 : 1,
+                boxShadow: isHovered ? '0 4px 10px rgba(0, 0, 0, 0.5)' : 'none', // 그림자 추가
+                transition: 'box-shadow 0.3s ease', // 부드러운 전환 효과
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <img
+                src={img.src}
+                alt="Dropped Image"
+                style={{
+                    width: size.width,
+                    height: size.height,
+                }}
+            />
+            <div
+                onMouseDown={handleMouseDown}
+                style={{
+                    position: 'absolute',
+                    right: 0,
+                    bottom: 0,
+                    width: '20px',
+                    height: '20px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    cursor: 'nwse-resize',
+                    opacity: isHovered ? 1 : 0,
+                }}
+            />
+            {/* 삭제 버튼 */}
+            {isHovered && (
+                <button onClick={() => onRemove(img.src)} style={{ 
+                    position: 'absolute', 
+                    top: '5px', 
+                    right: '5px', 
+                    backgroundColor: 'transparent', 
+                    border: 'none', 
+                    cursor: 'pointer', 
+                    color: 'black', 
+                    fontSize: '20px' 
+                }}>
+                    &times;
+                </button>
+            )}
+            {/* 배경 제거 버튼 */}
+            {isHovered && (
+                <button
+                    onClick={handleRemoveBackground}
+                    style={{
+                        position: 'absolute',
+                        bottom: '5px',
+                        left: '5px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '5px',
+                        borderRadius: '5px',
+                    }}
+                    disabled={loading}
+                >
+                    {loading ? '처리 중...' : '배경 제거'}
+                </button>
+            )}
+        </div>
+    );
 }
+
+
 
 const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, canvasRef }) => {
   const [, drop] = useDrop(() => ({
@@ -514,8 +518,8 @@ useEffect(() => {
     return new Promise((resolve) => {
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
-      const centerImageWidth = 1024;
-      const centerImageHeight = 1792;
+      const centerImageWidth = 600;
+      const centerImageHeight = 800;
   
       canvas.width = centerImageWidth;
       canvas.height = centerImageHeight;
@@ -720,20 +724,21 @@ const renderContent = () => {
     case '로고':
       return (
         <div style={contentStyle}>
-          <h2>로고 삽입 화면입니다.</h2>
+          <h2 style={{ fontWeight: 'bold' }}>로고를 삽입하세요!</h2>
           <input type="file" accept="image/*" onChange={handleLogoImageUpload} />
         </div>
       );
     case 'QR 코드':
       return (
         <div style={contentStyle}>
-          <h2>QR 코드 삽입 화면입니다.</h2>
+          <h2 style={{ fontWeight: 'bold' }}>QR 코드를 삽입하세요!</h2>
           <input type="file" accept="image/*" onChange={handleQRImageUpload} />
         </div>
       );
     case '텍스트':
       return (
         <div style={{ ...contentStyle, ...styles.textEditorContainer }}>
+          <h2 style={{ fontWeight: 'bold' }}>텍스트를 원하는 곳에 입력하세요!</h2>
           <input 
             type="text" 
             value={currentText} 
@@ -837,7 +842,7 @@ const renderContent = () => {
     case '이미지':
       return (
         <div style={contentStyle}>
-          <h2>이미지 삽입 화면입니다.</h2>
+          <h2 style={{ fontWeight: 'bold' }}>이미지를 검색 후 삽입하세요!</h2>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
             <input 
               type="text" 
@@ -919,15 +924,6 @@ const handleQRImageUpload = (event2) => {
           <Container fluid>
             <Navbar.Brand className='custom-text-black' href="/">SPARKLE</Navbar.Brand>
             <Nav className="me-auto">
-              <Link to="/send-message">
-                <Button className="custom-button nav-link-spacing">문자 보내기</Button>
-              </Link>
-              <Link to="/message-history">
-                <Button className="custom-button nav-link-spacing">문자 내역 보기</Button>
-              </Link>
-              <Link to="/address-book-manage">
-                <Button className="custom-button nav-link-spacing">주소록 관리</Button>
-              </Link>
             </Nav>
           </Container>
         </Navbar>
@@ -950,7 +946,7 @@ const handleQRImageUpload = (event2) => {
           />
 
           <div style={styles.rightContainer}>
-            <h3>발신자 번호 입력</h3>
+          <h3 style={{ fontWeight: 'bold' }}>발신자 번호 입력</h3>
             <input 
               type="text" 
               value={senderNumber} 
@@ -960,7 +956,7 @@ const handleQRImageUpload = (event2) => {
             />
 
             
-            <h3>수신자 번호 입력</h3>
+            <h3 style={{ fontWeight: 'bold' }} >수신자 번호 입력</h3>
             <button style={styles.button} onClick={() => document.getElementById('file-upload').click()}>
               주소록 업로드
             </button>
@@ -989,7 +985,7 @@ const handleQRImageUpload = (event2) => {
               <option value="대구">대구</option>
             </select> */}
 
-            <h3>발송 메시지</h3>
+            <h3 style={{ fontWeight: 'bold' }}>발송 메시지</h3>
             <textarea 
               value={message} 
               onChange={handleMessageChange} 
@@ -1011,7 +1007,7 @@ const handleQRImageUpload = (event2) => {
           </div>
         </div>
 
-        <button className="custom-floating-button floating-button" onClick={openModal}>
+        {/* <button className="custom-floating-button floating-button" onClick={openModal}>
           {'<<'}
         </button>
 
@@ -1042,7 +1038,7 @@ const handleQRImageUpload = (event2) => {
           <button className="custom-login-button" onClick={handleLogin}>
             로그인
           </button>
-        </Modal>
+        </Modal> */}
 
         
 
@@ -1116,6 +1112,7 @@ const styles = {
     justifyContent: 'flex-start',
     marginRight: '10px',
     marginTop: '10px',
+
   },
   centerContainer: {
     width: '600px',
@@ -1125,20 +1122,26 @@ const styles = {
     position: 'relative',
     marginRight: '10px',
     marginTop: '10px',
+    marginBottom: '10px',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.5)', // 그림자 추가
   },
   centerImage: {
     width: '600',
     height: '800',
-    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)', // 그림자 추가
   },
   rightContainer: {
     width: '25%',
     display: 'flex',
+    padding: '15px',
     flexDirection: 'column',
     justifyContent: 'space-around',
     marginTop: '10px',
     marginRight: '10px',
-  },
+    marginBottom: '10px',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)', // 그림자 추가
+    borderRadius: '5px',
+},
+
   sidebar: {
     width: '100%',
     display: 'flex',
@@ -1215,8 +1218,8 @@ const styles = {
     marginBottom: '10px',
   },
   textEditorContainer: {
-    backgroundColor: '#f9f9f9',
-    padding: '15px',
+    backgroundColor: '#ffffff',
+    padding: '20px',
     borderRadius: '10px',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     marginBottom: '20px',

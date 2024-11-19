@@ -111,7 +111,7 @@ function SendMessage() {
         <Container fluid>
           <Navbar.Brand className='custom-text-black' href="/">SPARKLE</Navbar.Brand>
           <Nav className="me-auto">
-            <Link to="/send-message">
+            {/* <Link to="/send-message">
               <Button className="custom-button nav-link-spacing">문자 보내기</Button>
             </Link>
             <Link to="/message-history">
@@ -119,19 +119,20 @@ function SendMessage() {
             </Link>
             <Link to="/address-book-manage">
               <Button className="custom-button nav-link-spacing">주소록 관리</Button>
-            </Link>
+            </Link> */}
           </Nav>
         </Container>
       </Navbar>
 
       <div style={styles.container}>
         <div style={styles.leftSection}>
+        <h2 style={{ fontWeight: 'bold' }}>이미지 생성하기</h2>
           <div>
             <p>뿌리오 AI 기능을 통해 메세지를 입력하시면 총 3장의 AI 광고 이미지가 생성됩니다.</p>
             <p>이미지 재생성 버튼을 통해 새로운 이미지 생성이 가능합니다.</p>
             <p>생성된 이미지를 선택하여 템플릿 기능을 통해 자유롭게 디자인 수정이 가능합니다.</p>
           </div>
-          <h2>발송 목적 및 내용</h2>
+          <h3 style={{ fontWeight: 'bold' }}>발송 목적 및 내용</h3>
           <textarea
             style={styles.textArea}
             value={description}
@@ -141,7 +142,7 @@ function SendMessage() {
           />
           <div style={styles.charCount}>{description.length}/2000 byte</div>
           <div style={styles.keywordSection}>
-            <h2>키워드 선택</h2>
+            <h3 style={{ fontWeight: 'bold' }}>키워드 선택</h3>
             <div style={styles.dropdownContainer}>
               <select value={category} onChange={handleCategoryChange} style={styles.select}>
                 <option value="차분한 분위기">차분한 분위기</option>
@@ -156,7 +157,7 @@ function SendMessage() {
               </select>
             </div>
             <div>
-              <h3>키워드 입력 (선택)</h3>
+              <h3 style={{ fontWeight: 'bold' }}>키워드 입력 (선택)</h3>
               <input
                 type="text"
                 value={keyword}
@@ -171,7 +172,7 @@ function SendMessage() {
           </div>
         </div>
         <div style={styles.rightSection}>
-          <h2>이미지 생성 결과</h2>
+          <h2 style={{ fontWeight: 'bold' }}>이미지 생성 결과</h2>
           <div style={styles.imageGrid}>
             {isLoading ? ( // 로딩 중일 때 스피너 표시
               <div className="spinner" style={styles.spinner}></div>
@@ -201,10 +202,10 @@ function SendMessage() {
           )}
         </div>
       </div>
-      <button className="custom-floating-button floating-button" onClick={openModal}>
+      {/* <button className="custom-floating-button floating-button" onClick={openModal}>
         {'<<'}
-      </button>
-      <Modal 
+      </button> */}
+      {/* <Modal 
         isOpen={modalIsOpen} 
         onRequestClose={closeModal} 
         className="custom-modal"
@@ -230,7 +231,7 @@ function SendMessage() {
         <button className="custom-login-button" onClick={handleLogin}>
           로그인
         </button>
-      </Modal>
+      </Modal> */}
     </div>
   );
 }
@@ -246,7 +247,7 @@ const styles = {
     marginTop: '10px',
   },
   leftSection: {
-    width: '45%',
+    width: '50%',
     paddingRight: '20px',
     borderRight: '1px solid #ccc',
   },
