@@ -338,43 +338,123 @@ const renderCanvasContent = () => {
 
   drawLiveText(ctx);  // 항상 실시간 입력 중인 텍스트 렌더링
 };
+const [hoveredTextId, setHoveredTextId] = useState(null); // 마우스가 위치한 텍스트 ID
+// 마우스 오버 상태
+const handleMouseMove = (e) => {
+  const canvas = canvasRef.current;
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
 
+  // 텍스트와 버튼을 감지
+  const hoveredId = texts.find((textObj) => {
+    const ctx = canvas.getContext('2d');
+    ctx.font = `${textObj.fontStyle} ${textObj.fontWeight} ${textObj.fontSize}px ${textObj.fontFamily}`;
+    const textWidth = ctx.measureText(textObj.text).width;
+    const textHeight = parseInt(textObj.fontSize, 10);
+    const textX = textObj.x;
+    const textY = textObj.y - textHeight;
+
+    // 버튼 영역 계산
+    const buttonWidth = 60;
+    const buttonHeight = 30;
+    const buttonX = textX + textWidth + 10;
+    const buttonY = textObj.y - textHeight / 2 - buttonHeight / 2;
+
+    // 마우스가 텍스트 또는 버튼 내부에 있는지 확인
+    return (
+      (mouseX >= textX &&
+        mouseX <= textX + textWidth &&
+        mouseY >= textY &&
+        mouseY <= textY + textHeight) ||
+      (mouseX >= buttonX &&
+        mouseX <= buttonX + buttonWidth &&
+        mouseY >= buttonY &&
+        mouseY <= buttonY + buttonHeight)
+    );
+  });
+
+
+
+  setHoveredTextId(hoveredId ? hoveredId.id : null); // 텍스트 또는 버튼 위에 있으면 ID 설정
+};
 // drawTexts 함수 수정
 const drawTexts = (ctx) => {
   texts.forEach((textObj) => {
-    const { text, x, y, fontSize, fontFamily, color, fontWeight, fontStyle, backgroundColor, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY } = textObj;
+    const {
+      id, text, x, y, fontSize, fontFamily, color, fontWeight, fontStyle,
+    } = textObj;
+
+    // 텍스트 스타일 적용 및 렌더링
     ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
-    
-
-    // 배경색상 처리
-    if (backgroundColor) {
-      ctx.fillStyle = backgroundColor;
-      ctx.fillRect(
-        x - 2,
-        y - parseInt(fontSize, 10),
-        ctx.measureText(text).width + 4,
-        parseInt(fontSize, 10) + 4
-      );
-    }
-
-    // 텍스트 그림자 처리
-    ctx.shadowColor = shadowColor;
-    ctx.shadowBlur = shadowBlur;
-    ctx.shadowOffsetX = shadowOffsetX;
-    ctx.shadowOffsetY = shadowOffsetY;
-
-    // 텍스트 색상 및 렌더링
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
 
-    // 그림자 초기화
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
+    // hoveredTextId가 일치하는 텍스트에만 "제거" 버튼 렌더링
+    if (hoveredTextId === id) {
+      const buttonWidth = 60;
+      const buttonHeight = 30;
+      const buttonX = x + ctx.measureText(text).width + 10;
+      const buttonY = y - fontSize / 2 - buttonHeight / 2;
+
+      // 버튼 배경 렌더링
+      ctx.fillStyle = '#CCCCCC';
+      ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+      // 버튼 텍스트 렌더링
+      ctx.fillStyle = '#000000';
+      ctx.font = '14px Arial';
+      ctx.fillText('제거', buttonX + 10, buttonY + 20);
+    }
+    console.log('Drawing text:', textObj.text, 'ID:', textObj.id, 'Hovered ID:', hoveredTextId);
+
   });
 };
+const handleCanvasClick = (e) => {
+  const canvas = canvasRef.current;
+  const rect = canvas.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const clickY = e.clientY - rect.top;
 
+  setTexts((prevTexts) =>
+    prevTexts.filter((textObj) => {
+      if (hoveredTextId === textObj.id) {
+        const ctx = canvas.getContext('2d');
+        const buttonWidth = 60; // 버튼 너비
+        const buttonHeight = 30; // 버튼 높이
+        const buttonX = textObj.x + ctx.measureText(textObj.text).width + 10;
+        const buttonY = textObj.y - textObj.fontSize / 2 - buttonHeight / 2;
+
+        // 클릭이 "제거" 버튼 내부인지 확인
+        return !(
+          clickX >= buttonX &&
+          clickX <= buttonX + buttonWidth &&
+          clickY >= buttonY &&
+          clickY <= buttonY + buttonHeight
+        );
+      }
+      return true; // 유지
+    })
+  );
+};
+useEffect(() => {
+  renderCanvasContent(); // 상태 변경 시 캔버스 렌더링
+}, [texts, hoveredTextId]);
+
+useEffect(() => {
+  const canvas = canvasRef.current;
+  if (canvas) {
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('click', handleCanvasClick);
+  }
+
+  return () => {
+    if (canvas) {
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('click', handleCanvasClick);
+    }
+  };
+}, [texts, hoveredTextId]);
 // 실시간으로 입력 중인 텍스트를 렌더링
 const drawLiveText = (ctx) => {
   if (currentText.trim()) {
