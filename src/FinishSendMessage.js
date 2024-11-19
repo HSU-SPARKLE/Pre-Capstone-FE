@@ -39,7 +39,7 @@ function MainContent({ capturedImageUrl }) { // props로 capturedImageUrl 추가
 
       <div style={styles.mainContent}>
         <div style={styles.promoMessage}>
-          <h2>문자 발송이 완료되었습니다!</h2>
+          <h2 style={{ fontWeight: 'bold'}}>문자 발송이 완료되었습니다!</h2>
         </div>
         <div style={styles.promoAd}>
           <div style={styles.imageSection}>
@@ -144,7 +144,7 @@ const styles = {
     alignItems: 'center', // 세로 중앙 정렬
   },
   imageSection: {
-    marginRight: '20px',
+    marginRight: '0px',
   },
   promoImage: {
     width: '400px',
