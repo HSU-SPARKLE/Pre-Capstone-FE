@@ -581,6 +581,10 @@ const fetchImages = async () => {
   }
 };
 
+  const claerBackgroundColor = () => {
+    setBackgroundColor('');
+  };
+
 
   const handleSearch = () => {
     if (searchKeyword) {
@@ -725,14 +729,60 @@ const renderContent = () => {
       return (
         <div style={contentStyle}>
           <h2 style={{ fontWeight: 'bold' }}>로고를 삽입하세요!</h2>
-          <input type="file" accept="image/*" onChange={handleLogoImageUpload} />
+          <label
+            style={{
+              display: 'inline-block',
+              padding: '10px 20px',
+              cursor: 'pointer',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              fontSize: '16px',
+              transition: 'background-color 0.3s',
+              margin: '10px',
+            }}
+            htmlFor="file-upload"
+          >
+            파일 선택
+          </label>
+          <input
+            id="file-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleLogoImageUpload}
+            style={{ display: 'none' }} // 기본 파일 입력 숨김
+          />
         </div>
       );
     case 'QR 코드':
       return (
         <div style={contentStyle}>
           <h2 style={{ fontWeight: 'bold' }}>QR 코드를 삽입하세요!</h2>
-          <input type="file" accept="image/*" onChange={handleQRImageUpload} />
+          <label
+            style={{
+              display: 'inline-block',
+              padding: '10px 20px',
+              cursor: 'pointer',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              fontSize: '16px',
+              transition: 'background-color 0.3s',
+              margin: '10px',
+            }}
+            htmlFor="file-upload"
+          >
+            파일 선택
+          </label>
+          <input
+            id="file-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleQRImageUpload}
+            style={{ display: 'none' }} // 기본 파일 입력 숨김
+          />
         </div>
       );
     case '텍스트':
@@ -778,6 +828,7 @@ const renderContent = () => {
               onChange={(e) => setBackgroundColor(e.target.value)} 
               style={styles.colorInput}
             />
+            <button onClick={claerBackgroundColor} style={styles.searchButton}>배경 색 지우기</button>
           </div>
 
           <div style={styles.inlineGroup}>
