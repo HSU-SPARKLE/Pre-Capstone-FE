@@ -249,6 +249,7 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
   const CANVAS_HEIGHT = 600;
   const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파일 이름 저장
   const [file, setFile] = useState(null); // 파일 상태 추가
+  const [isSending, setIsSending] = useState(false); // 발송 상태 관리
 
   // 주소록 파일 업로드
   const handleFileUpload = (e) => {
@@ -452,6 +453,7 @@ useEffect(() => {
   const handleMessageChange = (e) => setMessage(e.target.value);
 
   const handleSendClick = async () => {
+    setIsSending(true); // 발송 시작 시 상태 업데이트
     const userId = 1;
 
     try {
@@ -500,7 +502,10 @@ useEffect(() => {
         navigate('/finish-send-message');
     } catch (error) {
         console.error("이미지 생성 중 오류 발생:", error);
+    } finally {
+      setIsSending(false); // 발송 완료 시 상태 업데이트
     }
+    
 };
 
   
@@ -999,7 +1004,9 @@ const handleQRImageUpload = (event2) => {
               <button style={styles.smallButton}>테스트 발송</button> */}
             </div>
 
-            <button onClick={handleSendClick} style={styles.sendButton}>발송하기</button>
+            <button onClick={handleSendClick} style={styles.sendButton}>
+              {isSending ? '발송 중...' : '발송하기'}
+            </button>
           </div>
         </div>
 
