@@ -34,21 +34,12 @@ function MainContent({ capturedImageUrl }) { // props로 capturedImageUrl 추가
       <Navbar className="custom-navbar" style={styles.navbar}>
         <Navbar.Brand className='custom-text-black' href="/">SPARKLE</Navbar.Brand>
         <Nav className="me-auto">
-          <Link to="/send-message">
-            <Button className="custom-button nav-link-spacing">문자 보내기</Button>
-          </Link>
-          <Link to="/message-history">
-            <Button className="custom-button nav-link-spacing">문자 내역 보기</Button>
-          </Link>
-          <Link to="/address-book-manage">
-            <Button className="custom-button nav-link-spacing">주소록 관리</Button>
-          </Link>
         </Nav>
       </Navbar>
 
       <div style={styles.mainContent}>
         <div style={styles.promoMessage}>
-          <h2>문자 발송이 완료되었습니다!</h2>
+          <h2 style={{ fontWeight: 'bold'}}>문자 발송이 완료되었습니다!</h2>
         </div>
         <div style={styles.promoAd}>
           <div style={styles.imageSection}>
@@ -56,16 +47,16 @@ function MainContent({ capturedImageUrl }) { // props로 capturedImageUrl 추가
               <img src={capturedImageUrl} alt="Promo" style={styles.promoImage} />
             )}
           </div>
-          <div style={styles.promoDetails}>
+          {/* <div style={styles.promoDetails}>
             <ul>
               <li style={styles.promoDetailItem}>발송일자: 2024-10-07</li>
               <li style={styles.promoDetailItem}>발신번호: 010-1234-5678</li>
               <li style={styles.promoDetailItem}>주소록 별칭: 한성대학교 대상 주소록</li>
             </ul>
-          </div>
+          </div> */}
         </div>
 
-        <button className="custom-floating-button floating-button" onClick={openModal}>
+        {/* <button className="custom-floating-button floating-button" onClick={openModal}>
           {'<<'}
         </button>
 
@@ -96,7 +87,7 @@ function MainContent({ capturedImageUrl }) { // props로 capturedImageUrl 추가
           <button className="custom-login-button" onClick={handleLogin}>
             로그인
           </button>
-        </Modal>
+        </Modal> */}
       </div>
     </div>
   );
@@ -153,7 +144,7 @@ const styles = {
     alignItems: 'center', // 세로 중앙 정렬
   },
   imageSection: {
-    marginRight: '20px',
+    marginRight: '0px',
   },
   promoImage: {
     width: '400px',

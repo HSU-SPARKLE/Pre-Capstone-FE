@@ -10,8 +10,9 @@ import Modal from 'react-modal';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 
+
+const REMOVE_BG_KEY = 'dkb2T1hFjHtEG9LkZVF3qq1i'
 const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
-// const FREEPIK_ACCESS_KEY = 'FPSX635f8874fb044212b7f4c1e2891f18e3'; // Freepik API 키
 
 
 const ItemType = {
@@ -38,119 +39,142 @@ function DraggableImage({ image }) {
   );
 }
 
-function ResizableImage({ img, onResize, onDrop, onRemove, onClick }) {
-  const [size, setSize] = useState(img.size);
-  const [isHovered, setIsHovered] = useState(false);
 
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: ItemType.IMAGE,
-    item: { src: img.src, position: img.position },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  }), [img.src, img.position]);
+function ResizableImage({ img, onResize, onRemove, onClick }) {
+    const [size, setSize] = useState(img.size);
+    const [isHovered, setIsHovered] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = size.width;
-    const startHeight = size.height;
+    const [{ isDragging }, drag] = useDrag(() => ({
+        type: ItemType.IMAGE,
+        item: { src: img.src, position: img.position },
+        collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
+        }),
+    }), [img.src, img.position]);
 
-    const aspectRatio = startWidth / startHeight; // 비율 저장
+    const handleMouseDown = (e) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = size.width;
+        const aspectRatio = startWidth / size.height;
 
-    const handleMouseMove = (e) => {
-      const newWidth = Math.max(50, startWidth + (e.clientX - startX));
-      const newHeight = newWidth / aspectRatio; // 비율 유지
+        const handleMouseMove = (e) => {
+            const newWidth = Math.max(50, startWidth + (e.clientX - startX));
+            const newHeight = newWidth / aspectRatio;
 
-      // 최대 크기 제한
-      const constrainedWidth = Math.min(newWidth, 400);
-      const constrainedHeight = Math.min(newHeight, 600);
+            const constrainedWidth = Math.min(newWidth, 600);
+            const constrainedHeight = Math.min(newHeight, 800);
 
-      // 비율 유지하며 최대 크기 적용
-      if (constrainedWidth / aspectRatio <= 600) {
-        setSize({ width: constrainedWidth, height: constrainedWidth / aspectRatio });
-      } else {
-        setSize({ width: constrainedWidth, height: constrainedHeight });
-      }
+            setSize({ width: constrainedWidth, height: constrainedHeight });
+            onResize(img.src, { width: constrainedWidth, height: constrainedHeight, src: img.src });
+        };
 
-      onResize(img.src, { width: constrainedWidth, height: constrainedHeight });
+        const handleMouseUp = () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
     };
 
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+    const handleRemoveBackground = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.post('https://api.remove.bg/v1.0/removebg', {
+                image_url: img.src,
+                size: 'auto',
+            }, {
+                headers: {
+                    'X-Api-Key': REMOVE_BG_KEY,
+                    'Content-Type': 'application/json',
+                },
+                responseType: 'blob',
+            });
+
+            const url = URL.createObjectURL(new Blob([response.data]));
+            onResize(img.src, { ...size, src: url }); // 배경 제거된 이미지로 업데이트
+        } catch (error) {
+            console.error("배경 제거 오류:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
-  return (
-    <div
-      ref={drag}
-      onClick={() => onClick(img.src)} // 이미지 클릭 시 호출
-      style={{
-        position: 'absolute',
-        display: 'inline-block',
-        left: img.position.left,
-        top: img.position.top,
-        opacity: isDragging ? 0.5 : 1,
-        boxShadow: isHovered ? '0 4px 10px rgba(0, 0, 0, 0.5)' : 'none',
-        overflow: 'hidden',
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <img
-        src={img.src}
-        alt="Dropped Image"
-        style={{
-          width: size.width,
-          height: size.height,
-          position: 'relative',
-        }}
-      />
-      <div
-        onMouseDown={handleMouseDown}
-        style={{
-          position: 'absolute',
-          right: 0,
-          bottom: 0,
-          width: '20px',
-          height: '20px',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          cursor: 'nwse-resize',
-          opacity: isHovered ? 1 : 0,
-          visibility: isHovered ? 'visible' : 'hidden',
-          transition: 'opacity 0.3s ease',
-        }}
-      />
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove(img.src);
-        }}
-        style={{
-          position: 'absolute',
-          top: '5px',
-          right: '5px',
-          backgroundColor: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          color: 'black',
-          fontSize: '20px',
-          opacity: isHovered ? 1 : 0,
-          visibility: isHovered ? 'visible' : 'hidden',
-          transition: 'opacity 0.3s ease',
-        }}
-      >
-        &times;
-      </button>
-    </div>
-  );
+    return (
+        <div
+            ref={drag}
+            onClick={() => onClick(img.src)}
+            style={{
+                position: 'absolute',
+                left: img.position.left,
+                top: img.position.top,
+                opacity: isDragging ? 0.5 : 1,
+                boxShadow: isHovered ? '0 4px 10px rgba(0, 0, 0, 0.5)' : 'none', // 그림자 추가
+                transition: 'box-shadow 0.3s ease', // 부드러운 전환 효과
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <img
+                src={img.src}
+                alt="Dropped Image"
+                style={{
+                    width: size.width,
+                    height: size.height,
+                }}
+            />
+            <div
+                onMouseDown={handleMouseDown}
+                style={{
+                    position: 'absolute',
+                    right: 0,
+                    bottom: 0,
+                    width: '20px',
+                    height: '20px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    cursor: 'nwse-resize',
+                    opacity: isHovered ? 1 : 0,
+                }}
+            />
+            {/* 삭제 버튼 */}
+            {isHovered && (
+                <button onClick={() => onRemove(img.src)} style={{ 
+                    position: 'absolute', 
+                    top: '5px', 
+                    right: '5px', 
+                    backgroundColor: 'transparent', 
+                    border: 'none', 
+                    cursor: 'pointer', 
+                    color: 'black', 
+                    fontSize: '20px' 
+                }}>
+                    &times;
+                </button>
+            )}
+            {/* 배경 제거 버튼 */}
+            {isHovered && (
+                <button
+                    onClick={handleRemoveBackground}
+                    style={{
+                        position: 'absolute',
+                        bottom: '5px',
+                        left: '5px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '5px',
+                        borderRadius: '5px',
+                    }}
+                    disabled={loading}
+                >
+                    {loading ? '처리 중...' : '배경 제거'}
+                </button>
+            )}
+        </div>
+    );
 }
-
 
 
 
@@ -183,8 +207,8 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, ca
     <div ref={drop} style={styles.centerContainer}>
       <canvas
         ref={canvasRef}
-        width={400}
-        height={600}
+        width={600}
+        height={800}
         id="center-image"
       />
         
@@ -192,11 +216,12 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, ca
         <ResizableImage
           key={index}
           img={img}
-          onResize={(src, newSize) => {
+          onResize={(src, newImage) => {
             setCenterImages(prev => 
-              prev.map(image => image.src === src ? { ...image, size: newSize } : image)
+                prev.map(image => image.src === src ? { ...image, src: newImage.src, size: newImage } : image)
             );
-          }}
+        }}
+      
           onRemove={handleRemove}
           onClick={onImageClick}
         />
@@ -224,10 +249,11 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
   const [shadowBlur, setShadowBlur] = useState(0);
   const [shadowOffsetX, setShadowOffsetX] = useState(0);
   const [shadowOffsetY, setShadowOffsetY] = useState(0);
-  const CANVAS_WIDTH = 400;
-  const CANVAS_HEIGHT = 600;
-  const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파이 이름 저장
+  const CANVAS_WIDTH = 600;
+  const CANVAS_HEIGHT = 800;
+  const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파일 이름 저장
   const [file, setFile] = useState(null); // 파일 상태 추가
+  const [isSending, setIsSending] = useState(false); // 발송 상태 관리
 
   // 주소록 파일 업로드
   const handleFileUpload = (e) => {
@@ -241,24 +267,25 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
 // 텍스트 추가 시 위치를 이미지 중앙으로 설정
 const addText = () => {
   if (currentText.trim()) {
-    setTexts((prevTexts) => 
-      [...prevTexts, {
-        id: prevTexts.length, // 각 텍스트 항목에 고유한 ID를 할당
+    setTexts((prevTexts) => [
+      ...prevTexts,
+      {
+        id: prevTexts.length, // 각 텍스트 항목에 고유한 ID
         text: currentText,
         x: textPosition.x,
         y: textPosition.y,
-        fontSize: fontSize,
-        fontFamily: fontFamily,
+        fontSize,
+        fontFamily,
         color: textColor,
-        fontWeight: fontWeight,
-        fontStyle: fontStyle,
-        backgroundColor: backgroundColor,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffsetX: shadowOffsetX,
-        shadowOffsetY: shadowOffsetY,
-      }]
-    );
+        fontWeight,
+        fontStyle,
+        backgroundColor,
+        shadowColor,
+        shadowBlur,
+        shadowOffsetX,
+        shadowOffsetY,
+      },
+    ]);
 
     // 입력 필드 초기화
     setCurrentText('');
@@ -276,6 +303,7 @@ const addText = () => {
   }
 };
 
+
   // 새로운 상태 추가
 const [backgroundColor, setBackgroundColor] = useState(''); // 초기값을 빈 문자열로 설정하여 배경색 없음
 
@@ -283,17 +311,8 @@ const renderCanvasContent = () => {
   const canvas = canvasRef.current;
   if (!canvas) return;
 
-  centerImages.forEach((img) => {
-    const image = new Image();
-    image.src = img.src;
-    image.onload = () => {
-      ctx.drawImage(image, img.position.left, img.position.top, img.size.width, img.size.height);
-    };
-  });
-  
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
 
   // 배경 이미지 렌더링
   if (image) {
@@ -301,43 +320,83 @@ const renderCanvasContent = () => {
     img.src = image;
     img.onload = () => {
       ctx.drawImage(img, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      drawTexts(ctx);  // 이미지 로드 후 기존 텍스트 렌더링
-      drawLiveText(ctx);  // 실시간 텍스트 렌더링
+      drawTexts(ctx); // 기존 텍스트 렌더링
+      drawLiveText(ctx); // 입력 중인 텍스트 렌더링
     };
   } else {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    drawTexts(ctx);  // 이미지가 없을 때도 기존 텍스트 렌더링
+    drawTexts(ctx); // 기존 텍스트 렌더링
+    drawLiveText(ctx); // 입력 중인 텍스트 렌더링
   }
-
-  drawLiveText(ctx);  // 항상 실시간 입력 중인 텍스트 렌더링
 };
 
+const [hoveredTextId, setHoveredTextId] = useState(null); // 마우스가 위치한 텍스트 ID
+// 마우스 오버 상태
+const handleMouseMove = (e) => {
+  const canvas = canvasRef.current;
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+
+  // 텍스트와 버튼을 감지
+  const hoveredId = texts.find((textObj) => {
+    const ctx = canvas.getContext('2d');
+    ctx.font = `${textObj.fontStyle} ${textObj.fontWeight} ${textObj.fontSize}px ${textObj.fontFamily}`;
+    const textWidth = ctx.measureText(textObj.text).width;
+    const textHeight = parseInt(textObj.fontSize, 10);
+    const textX = textObj.x;
+    const textY = textObj.y - textHeight;
+
+    // 버튼 영역 계산
+    const buttonWidth = 60;
+    const buttonHeight = 30;
+    const buttonX = textX + textWidth + 10;
+    const buttonY = textObj.y - textHeight / 2 - buttonHeight / 2;
+
+    // 마우스가 텍스트 또는 버튼 내부에 있는지 확인
+    return (
+      (mouseX >= textX &&
+        mouseX <= textX + textWidth &&
+        mouseY >= textY &&
+        mouseY <= textY + textHeight) ||
+      (mouseX >= buttonX &&
+        mouseX <= buttonX + buttonWidth &&
+        mouseY >= buttonY &&
+        mouseY <= buttonY + buttonHeight)
+    );
+  });
+
+
+
+  setHoveredTextId(hoveredId ? hoveredId.id : null); // 텍스트 또는 버튼 위에 있으면 ID 설정
+};
 // drawTexts 함수 수정
 const drawTexts = (ctx) => {
   texts.forEach((textObj) => {
-    const { text, x, y, fontSize, fontFamily, color, fontWeight, fontStyle, backgroundColor, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY } = textObj;
-    ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
-    
+    const {
+      id, text, x, y, fontSize, fontFamily, color, fontWeight, fontStyle,
+      backgroundColor, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY,
+    } = textObj;
 
-    // 배경색상 처리
+    // 텍스트 스타일 설정
+    ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+
+    // 배경색 렌더링
     if (backgroundColor) {
+      const textWidth = ctx.measureText(text).width;
+      const textHeight = parseInt(fontSize, 10);
       ctx.fillStyle = backgroundColor;
-      ctx.fillRect(
-        x - 2,
-        y - parseInt(fontSize, 10),
-        ctx.measureText(text).width + 4,
-        parseInt(fontSize, 10) + 4
-      );
+      ctx.fillRect(x - 2, y - textHeight, textWidth + 4, textHeight + 4); // 약간의 여백 포함
     }
 
-    // 텍스트 그림자 처리
-    ctx.shadowColor = shadowColor;
-    ctx.shadowBlur = shadowBlur;
-    ctx.shadowOffsetX = shadowOffsetX;
-    ctx.shadowOffsetY = shadowOffsetY;
+    // 그림자 설정
+    ctx.shadowColor = shadowColor || 'transparent';
+    ctx.shadowBlur = shadowBlur || 0;
+    ctx.shadowOffsetX = shadowOffsetX || 0;
+    ctx.shadowOffsetY = shadowOffsetY || 0;
 
-    // 텍스트 색상 및 렌더링
+    // 텍스트 렌더링
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
 
@@ -346,9 +405,71 @@ const drawTexts = (ctx) => {
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
+
+    // "제거" 버튼 렌더링
+    if (hoveredTextId === id) {
+      const buttonWidth = 60;
+      const buttonHeight = 30;
+      const buttonX = x + ctx.measureText(text).width + 10;
+      const buttonY = y - fontSize / 2 - buttonHeight / 2;
+
+      // 버튼 배경 렌더링
+      ctx.fillStyle = '#CCCCCC';
+      ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+      // 버튼 텍스트 렌더링
+      ctx.fillStyle = '#000000';
+      ctx.font = '14px Arial';
+      ctx.fillText('제거', buttonX + 10, buttonY + 20);
+    }
   });
 };
 
+const handleCanvasClick = (e) => {
+  const canvas = canvasRef.current;
+  const rect = canvas.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const clickY = e.clientY - rect.top;
+
+  setTexts((prevTexts) =>
+    prevTexts.filter((textObj) => {
+      if (hoveredTextId === textObj.id) {
+        const ctx = canvas.getContext('2d');
+        const buttonWidth = 60; // 버튼 너비
+        const buttonHeight = 30; // 버튼 높이
+        const buttonX = textObj.x + ctx.measureText(textObj.text).width + 10;
+        const buttonY = textObj.y - textObj.fontSize / 2 - buttonHeight / 2;
+
+        // 클릭이 "제거" 버튼 내부인지 확인
+        return !(
+          clickX >= buttonX &&
+          clickX <= buttonX + buttonWidth &&
+          clickY >= buttonY &&
+          clickY <= buttonY + buttonHeight
+        );
+      }
+      return true; // 유지
+    })
+  );
+};
+useEffect(() => {
+  renderCanvasContent(); // 상태 변경 시 캔버스 렌더링
+}, [texts, hoveredTextId]);
+
+useEffect(() => {
+  const canvas = canvasRef.current;
+  if (canvas) {
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('click', handleCanvasClick);
+  }
+
+  return () => {
+    if (canvas) {
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('click', handleCanvasClick);
+    }
+  };
+}, [texts, hoveredTextId]);
 // 실시간으로 입력 중인 텍스트를 렌더링
 const drawLiveText = (ctx) => {
   if (currentText.trim()) {
@@ -431,6 +552,7 @@ useEffect(() => {
   const handleMessageChange = (e) => setMessage(e.target.value);
 
   const handleSendClick = async () => {
+    setIsSending(true); // 발송 시작 시 상태 업데이트
     const userId = 1;
 
     try {
@@ -479,7 +601,10 @@ useEffect(() => {
         navigate('/finish-send-message');
     } catch (error) {
         console.error("이미지 생성 중 오류 발생:", error);
+    } finally {
+      setIsSending(false); // 발송 완료 시 상태 업데이트
     }
+    
 };
 
   
@@ -488,8 +613,8 @@ useEffect(() => {
     return new Promise((resolve) => {
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
-      const centerImageWidth = 400;
-      const centerImageHeight = 600;
+      const centerImageWidth = 600;
+      const centerImageHeight = 800;
   
       canvas.width = centerImageWidth;
       canvas.height = centerImageHeight;
@@ -534,7 +659,7 @@ useEffect(() => {
 
 
 
-// 이미지 가져오기 로직 수정
+// 이미지 가져오기
 const fetchImages = async () => {
   try {
     const response = await axios.get(`https://api.unsplash.com/search/photos`, {
@@ -550,6 +675,10 @@ const fetchImages = async () => {
     console.error("이미지 가져오기 오류:", error);
   }
 };
+
+  const claerBackgroundColor = () => {
+    setBackgroundColor('');
+  };
 
 
   const handleSearch = () => {
@@ -586,7 +715,6 @@ const fetchImages = async () => {
   }, []);
 
 
-  // onDrop 함수 수정
   const onDrop = (src, position) => {
     const newImage = new Image();
     newImage.src = src;
@@ -609,7 +737,6 @@ const fetchImages = async () => {
         newWidth = (originalWidth / originalHeight) * newHeight;
       }
   
-      // 상태 업데이트
       setCenterImages(prev => {
         const existingImage = prev.find(image => image.src === src);
         if (existingImage) {
@@ -632,6 +759,8 @@ const fetchImages = async () => {
   };
 
   const handleKeyDown = (e) => {
+    console.log("눌린 키:", e.key); // 로그 추가
+  
     if (selectedImage) {
       const centerOffset = document.getElementById('center-image').getBoundingClientRect();
       const centerImageWidth = centerOffset.width;
@@ -650,15 +779,16 @@ const fetchImages = async () => {
                 newPosition.top = Math.min(centerImageHeight - image.size.height, newPosition.top + 5);
                 break;
               case 'ArrowLeft':
-                newPosition.left = Math.max(0, newPosition.left - 5); // 왼쪽 경계
+                newPosition.left = Math.max(0, newPosition.left - 5);
                 break;
               case 'ArrowRight':
-                newPosition.left = Math.min(centerImageWidth - image.size.width, newPosition.left + 5); // 오른쪽 경계
+                newPosition.left = Math.min(centerImageWidth - image.size.width, newPosition.left + 5);
                 break;
               default:
                 break;
             }
   
+            console.log("이동 후 위치:", newPosition); // 로그 추가
             return { ...image, position: newPosition };
           }
           return image;
@@ -666,6 +796,8 @@ const fetchImages = async () => {
       );
     }
   };
+  
+
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -679,6 +811,7 @@ const fetchImages = async () => {
 const renderContent = () => {
   const contentStyle = {
     width: '100%', // 최대 너비 설정
+    height: '99%',
     padding: '20px', // 내부 여백
     margin: '0 auto', // 중앙 정렬
     backgroundColor: '#fff', // 배경색
@@ -690,20 +823,67 @@ const renderContent = () => {
     case '로고':
       return (
         <div style={contentStyle}>
-          <h2>로고 삽입 화면입니다.</h2>
-          <input type="file" accept="image/*" onChange={handleImageUpload} />
+          <h2 style={{ fontWeight: 'bold' }}>로고를 삽입하세요!</h2>
+          <label
+            style={{
+              display: 'inline-block',
+              padding: '10px 20px',
+              cursor: 'pointer',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              fontSize: '16px',
+              transition: 'background-color 0.3s',
+              margin: '10px',
+            }}
+            htmlFor="file-upload"
+          >
+            파일 선택
+          </label>
+          <input
+            id="file-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleLogoImageUpload}
+            style={{ display: 'none' }} // 기본 파일 입력 숨김
+          />
         </div>
       );
     case 'QR 코드':
       return (
         <div style={contentStyle}>
-          <h2>QR 코드 삽입 화면입니다.</h2>
-          <input type="file" accept="image/*" onChange={handleImageUpload} />
+          <h2 style={{ fontWeight: 'bold' }}>QR 코드를 삽입하세요!</h2>
+          <label
+            style={{
+              display: 'inline-block',
+              padding: '10px 20px',
+              cursor: 'pointer',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              fontSize: '16px',
+              transition: 'background-color 0.3s',
+              margin: '10px',
+            }}
+            htmlFor="file-upload"
+          >
+            파일 선택
+          </label>
+          <input
+            id="file-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleQRImageUpload}
+            style={{ display: 'none' }} // 기본 파일 입력 숨김
+          />
         </div>
       );
     case '텍스트':
       return (
         <div style={{ ...contentStyle, ...styles.textEditorContainer }}>
+          <h2 style={{ fontWeight: 'bold' }}>텍스트를 원하는 곳에 입력하세요!</h2>
           <input 
             type="text" 
             value={currentText} 
@@ -743,6 +923,7 @@ const renderContent = () => {
               onChange={(e) => setBackgroundColor(e.target.value)} 
               style={styles.colorInput}
             />
+            <button onClick={claerBackgroundColor} style={styles.searchButton}>배경 색 지우기</button>
           </div>
 
           <div style={styles.inlineGroup}>
@@ -807,18 +988,38 @@ const renderContent = () => {
     case '이미지':
       return (
         <div style={contentStyle}>
-          <h2>이미지 삽입 화면입니다.</h2>
-          <input 
-            type="text" 
-            value={searchKeyword} 
-            onChange={(e) => setSearchKeyword(e.target.value)} 
-            placeholder="검색 키워드 입력"
-          />
-          <button onClick={handleSearch}>검색</button>
+          <h2 style={{ fontWeight: 'bold' }}>이미지를 검색 후 삽입하세요!</h2>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+            <input 
+              type="text" 
+              value={searchKeyword} 
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearch(); // 엔터 키가 눌리면 검색 함수 호출
+                }
+              }} 
+              placeholder="검색 키워드 입력" 
+              style={{ 
+                marginRight: '8px', 
+                width: '85%',
+                padding: '10px',
+                borderRadius: '5px',
+                border: '1px solid #ccc',
+              }} // 원하는 너비로 조절
+            />
+            <button onClick={handleSearch} style={styles.searchButton}>검색</button>
+          </div>
+
+
           <div ref={galleryRef} style={styles.imageGallery}>
-            {images.map((image) => (
-              <DraggableImage key={image.id} image={image} />
-            ))}
+          {images.map((image, index) => (
+            <DraggableImage 
+              key={`${image.urls.small}-${index}`} // URL과 인덱스를 조합하여 고유 키 생성
+              image={image} 
+            />
+          ))}
+
           </div>
         </div>
       );
@@ -835,19 +1036,35 @@ const handleSearchKeyDown = (e) => {
 };
 
 // 로컬 이미지 업로드 핸들러 추가
-const handleImageUpload = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const localImage = {
-        src: reader.result,
+const handleLogoImageUpload = (event) => {
+  const Logofile = event.target.files[0];
+  if (Logofile) {
+    const Logoreader = new FileReader();
+    Logoreader.onloadend = () => {
+      const localLogoImage = {
+        src: Logoreader.result,
         position: { left: 0, top: 0 },
         size: { width: 100, height: 100 }
       };
-      onDrop(localImage.src, localImage.position);
+      onDrop(localLogoImage.src, localLogoImage.position);
     };
-    reader.readAsDataURL(file);
+    Logoreader.readAsDataURL(Logofile);
+  }
+};
+
+const handleQRImageUpload = (event2) => {
+  const QRfile = event2.target.files[0];
+  if (QRfile) {
+    const QRreader = new FileReader();
+    QRreader.onloadend = () => {
+      const localQRImage = {
+        src: QRreader.result,
+        position: { left: 0, top: 0 },
+        size: { width: 100, height: 100 }
+      };
+      onDrop(localQRImage.src, localQRImage.position);
+    };
+    QRreader.readAsDataURL(QRfile);
   }
 };
 
@@ -859,15 +1076,6 @@ const handleImageUpload = (event) => {
           <Container fluid>
             <Navbar.Brand className='custom-text-black' href="/">SPARKLE</Navbar.Brand>
             <Nav className="me-auto">
-              <Link to="/send-message">
-                <Button className="custom-button nav-link-spacing">문자 보내기</Button>
-              </Link>
-              <Link to="/message-history">
-                <Button className="custom-button nav-link-spacing">문자 내역 보기</Button>
-              </Link>
-              <Link to="/address-book-manage">
-                <Button className="custom-button nav-link-spacing">주소록 관리</Button>
-              </Link>
             </Nav>
           </Container>
         </Navbar>
@@ -890,7 +1098,7 @@ const handleImageUpload = (event) => {
           />
 
           <div style={styles.rightContainer}>
-            <h3>발신자 번호 입력</h3>
+          <h3 style={{ fontWeight: 'bold' }}>발신자 번호 입력</h3>
             <input 
               type="text" 
               value={senderNumber} 
@@ -900,7 +1108,7 @@ const handleImageUpload = (event) => {
             />
 
             
-            <h3>수신 주소록 선택</h3>
+            <h3 style={{ fontWeight: 'bold' }} >수신자 번호 입력</h3>
             <button style={styles.button} onClick={() => document.getElementById('file-upload').click()}>
               주소록 업로드
             </button>
@@ -929,7 +1137,7 @@ const handleImageUpload = (event) => {
               <option value="대구">대구</option>
             </select> */}
 
-            <h3>발송 메시지</h3>
+            <h3 style={{ fontWeight: 'bold' }}>발송 메시지</h3>
             <textarea 
               value={message} 
               onChange={handleMessageChange} 
@@ -945,11 +1153,13 @@ const handleImageUpload = (event) => {
               <button style={styles.smallButton}>테스트 발송</button> */}
             </div>
 
-            <button onClick={handleSendClick} style={styles.sendButton}>발송하기</button>
+            <button onClick={handleSendClick} style={styles.sendButton}>
+              {isSending ? '발송 중...' : '발송하기'}
+            </button>
           </div>
         </div>
 
-        <button className="custom-floating-button floating-button" onClick={openModal}>
+        {/* <button className="custom-floating-button floating-button" onClick={openModal}>
           {'<<'}
         </button>
 
@@ -980,7 +1190,7 @@ const handleImageUpload = (event) => {
           <button className="custom-login-button" onClick={handleLogin}>
             로그인
           </button>
-        </Modal>
+        </Modal> */}
 
         
 
@@ -1011,11 +1221,11 @@ function Sidebar({ setActivePage }) {
 function SidebarButton({ icon, text, onClick }) {
   return (
     <button className="sidebar-button" onClick={onClick} style={styles.optionButton}>
-      <span className="icon">{icon}</span>
-      <span className="text">{text}</span>
+      <span className="text" style={{ fontSize: '18px', fontWeight: 'bold',}}>{text}</span> {/* 원하는 크기로 조정 */}
     </button>
   );
 }
+
 
 // 모달 스타일
 const modalStyle = {
@@ -1045,32 +1255,45 @@ const styles = {
   },
   leftContainer: {
     width: '10%',
-    paddingRight: '10px',
+    margin: '10px',
   },
   contentContainer: {
     width: '40%',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-start',
+    marginRight: '10px',
+    marginTop: '10px',
+
   },
   centerContainer: {
-    width: '400px',
+    width: '600px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    marginRight: '10px',
+    marginTop: '10px',
+    marginBottom: '10px',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.5)', // 그림자 추가
   },
   centerImage: {
-    width: '400px',
-    height: '600px',
-    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)', // 그림자 추가
+    width: '600',
+    height: '800',
   },
   rightContainer: {
-    width: '40%',
+    width: '25%',
     display: 'flex',
+    padding: '15px',
     flexDirection: 'column',
     justifyContent: 'space-around',
-  },
+    marginTop: '10px',
+    marginRight: '10px',
+    marginBottom: '10px',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)', // 그림자 추가
+    borderRadius: '5px',
+},
+
   sidebar: {
     width: '100%',
     display: 'flex',
@@ -1078,6 +1301,7 @@ const styles = {
   },
   optionButton: {
     width: '100%',
+    height: '60px',
     marginBottom: '10px',
     padding: '10px',
     backgroundColor: '#007bff',
@@ -1099,7 +1323,7 @@ const styles = {
   },
   textarea: {
     width: '100%',
-    height: '80px',
+    height: '40%',
     padding: '10px',
     fontSize: '16px',
   },
@@ -1140,15 +1364,15 @@ const styles = {
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     overflowY: 'scroll',
-    height: '400px',
+    height: '650px',
   },
   image: {
     width: '30%',
     marginBottom: '10px',
   },
   textEditorContainer: {
-    backgroundColor: '#f9f9f9',
-    padding: '15px',
+    backgroundColor: '#ffffff',
+    padding: '20px',
     borderRadius: '10px',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     marginBottom: '20px',
@@ -1200,6 +1424,14 @@ const styles = {
     borderRadius: '5px',
     cursor: 'pointer',
     marginTop: '10px',
+  },
+  searchButton: {
+    padding: '10px 20px',
+    backgroundColor: '#007BFF',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
   },
   navButtons: {
     display: 'flex',
