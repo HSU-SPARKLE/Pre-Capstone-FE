@@ -905,7 +905,13 @@ const renderContent = () => {
                 }
               }} 
               placeholder="검색 키워드 입력" 
-              style={{ marginRight: '8px', width: '85%' }} // 원하는 너비로 조절
+              style={{ 
+                marginRight: '8px', 
+                width: '85%',
+                padding: '10px',
+                borderRadius: '5px',
+                border: '1px solid #ccc',
+              }} // 원하는 너비로 조절
             />
             <button onClick={handleSearch} style={styles.searchButton}>검색</button>
           </div>
