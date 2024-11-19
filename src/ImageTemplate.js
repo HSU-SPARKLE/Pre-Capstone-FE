@@ -1069,11 +1069,11 @@ function Sidebar({ setActivePage }) {
 function SidebarButton({ icon, text, onClick }) {
   return (
     <button className="sidebar-button" onClick={onClick} style={styles.optionButton}>
-      <span className="icon">{icon}</span>
-      <span className="text">{text}</span>
+      <span className="text" style={{ fontSize: '18px', fontWeight: 'bold',}}>{text}</span> {/* 원하는 크기로 조정 */}
     </button>
   );
 }
+
 
 // 모달 스타일
 const modalStyle = {
@@ -1149,6 +1149,7 @@ const styles = {
   },
   optionButton: {
     width: '100%',
+    height: '60px',
     marginBottom: '10px',
     padding: '10px',
     backgroundColor: '#007bff',
