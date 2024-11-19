@@ -267,24 +267,25 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
 // 텍스트 추가 시 위치를 이미지 중앙으로 설정
 const addText = () => {
   if (currentText.trim()) {
-    setTexts((prevTexts) => 
-      [...prevTexts, {
-        id: prevTexts.length, // 각 텍스트 항목에 고유한 ID를 할당
+    setTexts((prevTexts) => [
+      ...prevTexts,
+      {
+        id: prevTexts.length, // 각 텍스트 항목에 고유한 ID
         text: currentText,
         x: textPosition.x,
         y: textPosition.y,
-        fontSize: fontSize,
-        fontFamily: fontFamily,
+        fontSize,
+        fontFamily,
         color: textColor,
-        fontWeight: fontWeight,
-        fontStyle: fontStyle,
-        backgroundColor: backgroundColor,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffsetX: shadowOffsetX,
-        shadowOffsetY: shadowOffsetY,
-      }]
-    );
+        fontWeight,
+        fontStyle,
+        backgroundColor,
+        shadowColor,
+        shadowBlur,
+        shadowOffsetX,
+        shadowOffsetY,
+      },
+    ]);
 
     // 입력 필드 초기화
     setCurrentText('');
@@ -302,6 +303,7 @@ const addText = () => {
   }
 };
 
+
   // 새로운 상태 추가
 const [backgroundColor, setBackgroundColor] = useState(''); // 초기값을 빈 문자열로 설정하여 배경색 없음
 
@@ -309,17 +311,8 @@ const renderCanvasContent = () => {
   const canvas = canvasRef.current;
   if (!canvas) return;
 
-  centerImages.forEach((img) => {
-    const image = new Image();
-    image.src = img.src;
-    image.onload = () => {
-      ctx.drawImage(image, img.position.left, img.position.top, img.size.width, img.size.height);
-    };
-  });
-  
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
 
   // 배경 이미지 렌더링
   if (image) {
@@ -327,17 +320,17 @@ const renderCanvasContent = () => {
     img.src = image;
     img.onload = () => {
       ctx.drawImage(img, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      drawTexts(ctx);  // 이미지 로드 후 기존 텍스트 렌더링
-      drawLiveText(ctx);  // 실시간 텍스트 렌더링
+      drawTexts(ctx); // 기존 텍스트 렌더링
+      drawLiveText(ctx); // 입력 중인 텍스트 렌더링
     };
   } else {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    drawTexts(ctx);  // 이미지가 없을 때도 기존 텍스트 렌더링
+    drawTexts(ctx); // 기존 텍스트 렌더링
+    drawLiveText(ctx); // 입력 중인 텍스트 렌더링
   }
-
-  drawLiveText(ctx);  // 항상 실시간 입력 중인 텍스트 렌더링
 };
+
 const [hoveredTextId, setHoveredTextId] = useState(null); // 마우스가 위치한 텍스트 ID
 // 마우스 오버 상태
 const handleMouseMove = (e) => {
@@ -383,14 +376,37 @@ const drawTexts = (ctx) => {
   texts.forEach((textObj) => {
     const {
       id, text, x, y, fontSize, fontFamily, color, fontWeight, fontStyle,
+      backgroundColor, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY,
     } = textObj;
 
-    // 텍스트 스타일 적용 및 렌더링
+    // 텍스트 스타일 설정
     ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+
+    // 배경색 렌더링
+    if (backgroundColor) {
+      const textWidth = ctx.measureText(text).width;
+      const textHeight = parseInt(fontSize, 10);
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(x - 2, y - textHeight, textWidth + 4, textHeight + 4); // 약간의 여백 포함
+    }
+
+    // 그림자 설정
+    ctx.shadowColor = shadowColor || 'transparent';
+    ctx.shadowBlur = shadowBlur || 0;
+    ctx.shadowOffsetX = shadowOffsetX || 0;
+    ctx.shadowOffsetY = shadowOffsetY || 0;
+
+    // 텍스트 렌더링
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
 
-    // hoveredTextId가 일치하는 텍스트에만 "제거" 버튼 렌더링
+    // 그림자 초기화
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    // "제거" 버튼 렌더링
     if (hoveredTextId === id) {
       const buttonWidth = 60;
       const buttonHeight = 30;
@@ -406,10 +422,9 @@ const drawTexts = (ctx) => {
       ctx.font = '14px Arial';
       ctx.fillText('제거', buttonX + 10, buttonY + 20);
     }
-    console.log('Drawing text:', textObj.text, 'ID:', textObj.id, 'Hovered ID:', hoveredTextId);
-
   });
 };
+
 const handleCanvasClick = (e) => {
   const canvas = canvasRef.current;
   const rect = canvas.getBoundingClientRect();
