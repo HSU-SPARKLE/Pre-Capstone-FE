@@ -63,8 +63,8 @@ function ResizableImage({ img, onResize, onRemove, onClick }) {
           const newWidth = Math.max(50, startWidth + (e.clientX - startX));
           const newHeight = newWidth / aspectRatio;
 
-          const constrainedWidth = Math.min(newWidth, 400);
-          const constrainedHeight = Math.min(newHeight, 600);
+          const constrainedWidth = Math.min(newWidth, 600);
+          const constrainedHeight = Math.min(newHeight, 800);
 
           setSize({ width: constrainedWidth, height: constrainedHeight });
           onResize(img.src, { width: constrainedWidth, height: constrainedHeight, src: img.src });
@@ -203,8 +203,8 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, ca
     <div ref={drop} style={styles.centerContainer}>
       <canvas
         ref={canvasRef}
-        width={400}
-        height={600}
+        width={600}
+        height={800}
         id="center-image"
       />
         
@@ -245,8 +245,8 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
   const [shadowBlur, setShadowBlur] = useState(0);
   const [shadowOffsetX, setShadowOffsetX] = useState(0);
   const [shadowOffsetY, setShadowOffsetY] = useState(0);
-  const CANVAS_WIDTH = 400;
-  const CANVAS_HEIGHT = 600;
+  const CANVAS_WIDTH = 600;
+  const CANVAS_HEIGHT = 800;
   const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파일 이름 저장
   const [file, setFile] = useState(null); // 파일 상태 추가
   const [isSending, setIsSending] = useState(false); // 발송 상태 관리
@@ -514,8 +514,8 @@ useEffect(() => {
     return new Promise((resolve) => {
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
-      const centerImageWidth = 400;
-      const centerImageHeight = 600;
+      const centerImageWidth = 1024;
+      const centerImageHeight = 1792;
   
       canvas.width = centerImageWidth;
       canvas.height = centerImageHeight;
@@ -708,6 +708,7 @@ const fetchImages = async () => {
 const renderContent = () => {
   const contentStyle = {
     width: '100%', // 최대 너비 설정
+    height: '99%',
     padding: '20px', // 내부 여백
     margin: '0 auto', // 중앙 정렬
     backgroundColor: '#fff', // 배경색
@@ -848,7 +849,7 @@ const renderContent = () => {
                 }
               }} 
               placeholder="검색 키워드 입력" 
-              style={{ marginRight: '8px', width: '70%' }} // 원하는 너비로 조절
+              style={{ marginRight: '8px', width: '85%' }} // 원하는 너비로 조절
             />
             <button onClick={handleSearch} style={styles.searchButton}>검색</button>
           </div>
@@ -959,7 +960,7 @@ const handleQRImageUpload = (event2) => {
             />
 
             
-            <h3>수신 주소록 선택</h3>
+            <h3>수신자 번호 입력</h3>
             <button style={styles.button} onClick={() => document.getElementById('file-upload').click()}>
               주소록 업로드
             </button>
@@ -1117,7 +1118,7 @@ const styles = {
     marginTop: '10px',
   },
   centerContainer: {
-    width: '400px',
+    width: '600px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1126,12 +1127,12 @@ const styles = {
     marginTop: '10px',
   },
   centerImage: {
-    width: '400px',
-    height: '600px',
+    width: '600',
+    height: '800',
     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)', // 그림자 추가
   },
   rightContainer: {
-    width: '40%',
+    width: '25%',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-around',
@@ -1166,7 +1167,7 @@ const styles = {
   },
   textarea: {
     width: '100%',
-    height: '80px',
+    height: '40%',
     padding: '10px',
     fontSize: '16px',
   },
@@ -1207,7 +1208,7 @@ const styles = {
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     overflowY: 'scroll',
-    height: '400px',
+    height: '650px',
   },
   image: {
     width: '30%',
