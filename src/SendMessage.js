@@ -22,6 +22,7 @@ function SendMessage() {
   const [showRegenerateButton, setShowRegenerateButton] = useState(false);
   const [hoveredImageIndex, setHoveredImageIndex] = useState(null);
   const [isLoading, setIsLoading] = useState(false); // 로딩 상태 추가
+  const [advertiseMessage, setAdvertiseMessage] = useState("기본 메시지를 설정하세요.");
 
   const openModal = () => setModalIsOpen(true);
   const closeModal = () => setModalIsOpen(false);
@@ -40,80 +41,69 @@ function SendMessage() {
   let userId = 1;
   const handleImageGeneration = async () => {
     setIsLoading(true); // 로딩 시작
-  
-    // 기본 이미지 배열
-    const defaultImages = [
-      { src: 'https://sparcleblobstorage.blob.core.windows.net/test-blob/uploaded_image_1732000775517.png', alt: 'Image 1' },
-      { src: 'https://sparcleblobstorage.blob.core.windows.net/test-blob/uploaded_image_1732000776627.png', alt: 'Image 2' },
-      { src: 'https://sparcleblobstorage.blob.core.windows.net/test-blob/uploaded_image_1732000776960.png', alt: 'Image 3' },
-    ];
-  
+
     try {
-      // API 호출과 타임아웃 병렬 처리
-      const newImages = await Promise.race([
-        axios.post(`http://localhost:8080/api/message/generate/${userId}`, {
-          inputMessage: description,
-          mood: category,
-          season: season,
-          keyWordMessage: [keyword],
-        }).then((response) => {
-          // 유효한 이미지 URL 확인
-          if (Array.isArray(response.data.data.generatedImageUrls) && response.data.data.generatedImageUrls.length > 0) {
-            return response.data.data.generatedImageUrls.map((url, index) => ({
-              src: url,
-              alt: `Generated Image ${index + 1}`,
-            }));
-          }
-          return defaultImages; // 이미지 URL이 없으면 기본 이미지 반환
-        }),
-        new Promise((resolve) => {
-          setTimeout(() => resolve(defaultImages), 60000); // 60초 타임아웃 후 기본 이미지 반환
-        }),
-      ]);
-  
-      setSelectedImages(newImages); // 생성된 이미지 설정
-      setShowRegenerateButton(true); // 재생성 버튼 표시
+        const response = await axios.post(`http://localhost:8080/api/message/generate/${userId}`, {
+            inputMessage: description,
+            mood: category,
+            season: season,
+            keyWordMessage: [keyword],
+        });
+
+        const generatedImages = Array.isArray(response.data.data.generatedImageUrls) && response.data.data.generatedImageUrls.length > 0
+            ? response.data.data.generatedImageUrls.map((url, index) => ({
+                  src: url,
+                  alt: `Generated Image ${index + 1}`,
+              }))
+            : [];
+
+        setSelectedImages(generatedImages);
+        setAdvertiseMessage(response.data.data.advertiseMessage || "기본 메시지를 설정하세요.");
+
+        // 이미지 클릭 핸들러에 사용할 advertiseMessage를 포함합니다.
+        setShowRegenerateButton(true); // 재생성 버튼 표시
     } catch (error) {
-      console.error("이미지 생성 중 오류 발생:", error);
-      setSelectedImages(defaultImages); // 에러 발생 시 기본 이미지 설정
+        console.error("이미지 생성 중 오류 발생:", error);
     } finally {
-      setIsLoading(false); // 로딩 종료
+        setIsLoading(false); // 로딩 종료
     }
-  };
+};
+
 
   const handleImageRegeneration = async () => {
     setIsLoading(true); // 로딩 시작
     try {
-      const response = await axios.post(`http://localhost:8080/api/message/generate/${userId}`, {
-        inputMessage: description,
-        mood: category,
-        season: season,
-        keyWordMessage: [keyword],
-      });
+        const response = await axios.post(`http://localhost:8080/api/message/generate/1`, {
+            inputMessage: description,
+            mood: category,
+            season: season,
+            keyWordMessage: [keyword],
+        });
 
-      const regeneratedImages = Array.isArray(response.data.data.generatedImageUrls) && response.data.data.generatedImageUrls.length > 0
-        ? response.data.data.generatedImageUrls.map((url, index) => ({
-            src: url,
-            alt: `Generated Image ${index + 1}`
-          }))
-        : [
-            { src: 'https://blog.kakaocdn.net/dn/bvd1NP/btsFoctUnjD/spbSoDckKZTJno66EaDdCk/img.png', alt: 'New Image 1' },
-            { src: 'https://m.candlemano.com/web/product/big/202208/3f87090a39761a6d5ad10d09ff953e60.jpg', alt: 'New Image 2' },
-            { src: 'https://image.made-in-china.com/202f0j00aLlRpTervWqA/Colorful-Duck-Series-Bath-Duck-Toy-Floating-Duck-Baby-Bath-Duck-Kid-Duck.webp', alt: 'New Image 3' },
-          ];
+        const regeneratedImages = Array.isArray(response.data.data.generatedImageUrls) && response.data.data.generatedImageUrls.length > 0
+            ? response.data.data.generatedImageUrls.map((url, index) => ({
+                  src: url,
+                  alt: `Generated Image ${index + 1}`,
+              }))
+            : [];
 
-      setSelectedImages(regeneratedImages);
+        setSelectedImages(regeneratedImages);
+        setAdvertiseMessage(response.data.data.advertiseMessage || "기본 메시지를 설정하세요.");
     } catch (error) {
-      console.error("이미지 생성 중 오류 발생:", error);
+        console.error('이미지 생성 중 오류 발생:', error);
     } finally {
-      setIsLoading(false); // 로딩 종료
+        setIsLoading(false); // 로딩 종료
     }
-  };
+};
 
-  const handleImageClick = (image) => {
-    console.log('클릭된 이미지:', image.alt);
-    navigate('/image-template', { state: { image: image.src } }); // 클릭한 이미지의 URL 전달
-  };
+const handleImageClick = (image) => {
+  navigate('/image-template', {
+      state: {
+          image: image.src, // 선택한 이미지 URL 전달
+          message: advertiseMessage, // 광고 메시지 전달
+      },
+  });
+};
 
   const handleMouseEnter = (index) => setHoveredImageIndex(index);
   const handleMouseLeave = () => setHoveredImageIndex(null);

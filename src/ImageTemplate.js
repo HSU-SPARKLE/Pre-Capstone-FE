@@ -231,9 +231,9 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, ca
 };
 
 function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUrl 추가
-
   //텍스트 관련
   const location = useLocation();
+  console.log('전달된 state:', location.state);
   const [image, setImage] = useState(location.state?.image?.src || null);
   const [texts, setTexts] = useState([]);
   const [currentText, setCurrentText] = useState('');
@@ -254,6 +254,7 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
   const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파일 이름 저장
   const [file, setFile] = useState(null); // 파일 상태 추가
   const [isSending, setIsSending] = useState(false); // 발송 상태 관리
+  const [message, setMessage] = useState(location.state?.message || "기본 메시지를 설정하세요."); // 전달된 광고 메시지
 
   // 주소록 파일 업로드
   const handleFileUpload = (e) => {
@@ -523,7 +524,7 @@ useEffect(() => {
   const [senderNumber, setSenderNumber] = useState('');
   const [testSendPhoneNumber, setTestSendPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
-  const [message, setMessage] = useState('');
+  // const [message, setMessage] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [images, setImages] = useState([]);
   const [centerImages, setCenterImages] = useState([]);
