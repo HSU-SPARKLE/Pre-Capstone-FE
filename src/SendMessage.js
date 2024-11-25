@@ -22,7 +22,7 @@ function SendMessage() {
   const [showRegenerateButton, setShowRegenerateButton] = useState(false);
   const [hoveredImageIndex, setHoveredImageIndex] = useState(null);
   const [isLoading, setIsLoading] = useState(false); // 로딩 상태 추가
-  const [advertiseMessage, setAdvertiseMessage] = useState("기본 메시지를 설정하세요.");
+  const [advertiseMessage, setAdvertiseMessage] = useState("기본 상태");
 
   const openModal = () => setModalIsOpen(true);
   const closeModal = () => setModalIsOpen(false);
@@ -50,7 +50,6 @@ function SendMessage() {
     ];
   
     try {
-        setAdvertiseMessage(response.data.data.advertiseMessage || "기본 메시지를 설정하세요.");
       // API 호출과 타임아웃 병렬 처리
       const generatedImages = await Promise.race([
         axios.post(`http://localhost:8080/api/message/generate/1`, {
@@ -62,6 +61,7 @@ function SendMessage() {
           // 유효한 이미지 URL 확인
           if (Array.isArray(response.data.data.generatedImageUrls) && response.data.data.generatedImageUrls.length > 0) {
             // 광고 메시지를 상태에 저장
+            setAdvertiseMessage(response.data.data.advertiseMessage || "메시지 전송");
             return response.data.data.generatedImageUrls.map((url, index) => ({
               src: url,
               alt: `Generated Image ${index + 1}`,
