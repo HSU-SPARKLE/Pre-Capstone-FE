@@ -11,7 +11,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 
 
-const REMOVE_BG_KEY = 'dkb2T1hFjHtEG9LkZVF3qq1i'
+const REMOVE_BG_KEY = 'iyRFv3t7GPLBtWtfsWS9ksaD'
 const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
 
 
