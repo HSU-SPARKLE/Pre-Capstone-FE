@@ -838,12 +838,12 @@ const renderContent = () => {
               transition: 'background-color 0.3s',
               margin: '10px',
             }}
-            htmlFor="file-upload"
+            htmlFor="file-upload2"
           >
             파일 선택
           </label>
           <input
-            id="file-upload"
+            id="file-upload2"
             type="file"
             accept="image/*"
             onChange={handleLogoImageUpload}
