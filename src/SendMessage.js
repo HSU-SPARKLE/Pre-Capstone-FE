@@ -199,10 +199,13 @@ const handleImageClick = (image) => {
           </div>
         </div>
         <div style={styles.rightSection}>
-          <h2 style={{ fontWeight: 'bold' }}>이미지 생성 결과</h2>
+          <h2 style={{ fontWeight: 'bold' }}>이미지 선택하기</h2>
           <div style={styles.imageGrid}>
             {isLoading ? ( // 로딩 중일 때 스피너 표시
+            <div style={styles.spinnerContainer}>
               <div className="spinner" style={styles.spinner}></div>
+              <p style={styles.loadingText}>3장의 이미지를 생성 중입니다...</p>
+            </div>
             ) : (
               selectedImages.map((image, index) => (
                 <img
@@ -342,7 +345,20 @@ const styles = {
   spinner: {
     display: 'flex',
     justifyContent: 'center',
-    marginTop: '20px',
+    marginTop: '200px',
+  },
+  spinnerContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginTop: '0px',
+    marginLeft: '350px',
+  },
+  loadingText: {
+    marginTop: '250px',
+    marginRight: '20px',
+    fontSize: '20px',
+    color: '#555',
   },
 };
 
