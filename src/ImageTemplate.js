@@ -847,11 +847,11 @@ const renderContent = () => {
               borderRadius: '5px',
               fontSize: '16px',
               transition: 'background-color 0.3s',
-              margin: '10px',
+              marginTop: '10px',
             }}
             htmlFor="file-upload"
           >
-            파일 선택
+            이미지 선택
           </label>
           <input
             id="file-upload"
@@ -880,11 +880,11 @@ return (
           borderRadius: '5px',
           fontSize: '16px',
           transition: 'background-color 0.3s',
-          margin: '10px',
+          marginTop: '10px',
         }}
         htmlFor="file-upload"
       >
-        파일 선택
+        이미지 선택
       </label>
       <input
         id="file-upload"
@@ -925,7 +925,7 @@ return (
 
       {generatedQR && (
         <div style={{ marginTop: '20px' }}>
-          <h3>생성된 QR 코드:</h3>
+          <h3>생성된 QR 코드</h3>
           <div ref={qrRef} style={{ display: 'inline-block' }}>
             <QRCodeSVG value={generatedQR} size={256} />
           </div>
