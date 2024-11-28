@@ -38,6 +38,7 @@ function SendMessage() {
   const handleSeasonChange = (e) => setSeason(e.target.value);
 
   let userId = 1;
+
   const handleImageGeneration = async () => {
     setIsLoading(true); // 로딩 시작
     try {
@@ -166,7 +167,15 @@ function SendMessage() {
                 style={styles.input}
               />
             </div>
-            <button onClick={handleImageGeneration} style={styles.generateButton}>
+            <button
+              onClick={handleImageGeneration}
+              style={{
+                ...styles.generateButton,
+                backgroundColor: isLoading ? '#ccc' : '#007BFF', // 비활성화 상태 색상 변경
+                cursor: isLoading ? 'not-allowed' : 'pointer', // 커서 변경
+              }} 
+              disabled={isLoading} // 로딩 중일 때 버튼 비활성화
+            >
               이미지 생성하기
             </button>
           </div>
@@ -195,7 +204,15 @@ function SendMessage() {
           </div>
           {showRegenerateButton && !isLoading && ( // 로딩 중이 아닐 때만 재생성 버튼 표시
             <div style={styles.ButtonContainer}>
-              <button onClick={handleImageRegeneration} style={styles.generateButton}>
+              <button 
+                onClick={handleImageRegeneration} 
+                style={{
+                  ...styles.generateButton,
+                  backgroundColor: isLoading ? '#ccc' : '#007BFF', // 비활성화 상태 색상 변경
+                  cursor: isLoading ? 'not-allowed' : 'pointer', // 커서 변경
+                }} 
+                disabled={isLoading} // 로딩 중일 때 버튼 비활성화
+              >
                 이미지 재생성하기
               </button>
             </div>

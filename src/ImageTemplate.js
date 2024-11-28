@@ -9,6 +9,10 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-modal';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
+import { QRCodeSVG } from 'qrcode.react';
+import { renderToString } from 'react-dom/server'; // React 컴포넌트를 문자열로 렌더링
+import { toPng } from 'html-to-image';
+
 
 
 const REMOVE_BG_KEY = 'iyRFv3t7GPLBtWtfsWS9ksaD'
@@ -230,6 +234,9 @@ const DroppableArea = ({ onDrop, centerImages, setCenterImages, onImageClick, ca
   );
 };
 
+
+// 이미지 템플릿 컴포넌트
+
 function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUrl 추가
 
   //텍스트 관련
@@ -254,6 +261,10 @@ function ImageTemplate({ setCapturedImageUrl }) { // props로 setCapturedImageUr
   const [uploadedFileName, setUploadedFileName] = useState(''); // 주소록 파일 이름 저장
   const [file, setFile] = useState(null); // 파일 상태 추가
   const [isSending, setIsSending] = useState(false); // 발송 상태 관리
+  const [qrText, setQrText] = useState(''); // QR 코드에 들어갈 텍스트
+  const [generatedQR, setGeneratedQR] = useState(null); // 생성된 QR 코드 저장
+  const qrRef = useRef(null); // QR 코드를 감싸는 DOM 요소를 참조하기 위한 ref
+  
 
   // 주소록 파일 업로드
   const handleFileUpload = (e) => {
@@ -713,6 +724,7 @@ const fetchImages = async () => {
       }
     };
   }, []);
+  
 
 
   const onDrop = (src, position) => {
@@ -837,12 +849,12 @@ const renderContent = () => {
               transition: 'background-color 0.3s',
               margin: '10px',
             }}
-            htmlFor="file-upload"
+            htmlFor="file-upload2"
           >
             파일 선택
           </label>
           <input
-            id="file-upload"
+            id="file-uploa2"
             type="file"
             accept="image/*"
             onChange={handleLogoImageUpload}
@@ -850,36 +862,101 @@ const renderContent = () => {
           />
         </div>
       );
+
+
+
+      // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+      
     case 'QR 코드':
-      return (
-        <div style={contentStyle}>
-          <h2 style={{ fontWeight: 'bold' }}>QR 코드를 삽입하세요!</h2>
-          <label
+
+return (
+    <div style={contentStyle}>
+      <h2 style={{ fontWeight: 'bold' }}>QR 코드를 삽입하세요!</h2>
+      
+      <label
+        style={{
+          display: 'inline-block',
+          padding: '10px 20px',
+          cursor: 'pointer',
+          backgroundColor: '#007bff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          fontSize: '16px',
+          transition: 'background-color 0.3s',
+          margin: '10px',
+        }}
+        htmlFor="file-upload"
+      >
+        파일 선택
+      </label>
+      <input
+        id="file-upload"
+        type="file"
+        accept="image/*"
+        onChange={handleQRImageUpload}
+        style={{ display: 'none' }} // 기본 파일 입력 숨김
+      />
+      
+      <div style={{ marginTop: '20px' }}>
+        <input
+          type="text"
+          value={qrText}
+          onChange={handleTextChange}
+          placeholder="QR 코드에 들어갈 텍스트 혹은 URL 입력"
+          style={{
+            width: '100%',
+            padding: '10px',
+            borderRadius: '5px',
+            border: '1px solid #ccc',
+            marginBottom: '10px',
+          }}
+        />
+        <button
+          onClick={handleGenerateQR}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+          }}
+        >
+          QR 코드 생성
+        </button>
+      </div>
+
+      {generatedQR && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>생성된 QR 코드:</h3>
+          <div ref={qrRef} style={{ display: 'inline-block' }}>
+            <QRCodeSVG value={generatedQR} size={256} />
+          </div>
+          <button
+            onClick={handleUseGeneratedQR}
             style={{
-              display: 'inline-block',
               padding: '10px 20px',
-              cursor: 'pointer',
-              backgroundColor: '#007bff',
+              backgroundColor: '#28a745',
               color: 'white',
               border: 'none',
               borderRadius: '5px',
-              fontSize: '16px',
-              transition: 'background-color 0.3s',
-              margin: '10px',
+              cursor: 'pointer',
+              marginTop: '10px',
             }}
-            htmlFor="file-upload"
           >
-            파일 선택
-          </label>
-          <input
-            id="file-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleQRImageUpload}
-            style={{ display: 'none' }} // 기본 파일 입력 숨김
-          />
+            생성된 QR 코드 사용하기
+          </button>
         </div>
-      );
+      )}
+    </div>
+  );
+
+
+
+  // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+          
     case '텍스트':
       return (
         <div style={{ ...contentStyle, ...styles.textEditorContainer }}>
@@ -1068,6 +1145,76 @@ const handleQRImageUpload = (event2) => {
   }
 };
 
+const handleTextChange = (event) => {
+  setQrText(event.target.value);
+};
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+const handleGenerateQR = () => {
+  setGeneratedQR(qrText); // 현재 입력된 텍스트로 QR 코드 생성
+
+};
+
+
+const handleUseGeneratedQR = async () => {
+  if (qrRef.current) {
+    try {
+      // QR 코드를 PNG로 변환
+      const pngData = await toPng(qrRef.current);
+
+      // PNG 이미지를 Canvas로 로드
+      const image = new Image();
+      image.src = pngData;
+
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        // Canvas에 이미지 그리기
+        ctx.drawImage(image, 0, 0);
+
+        // 흰색 영역을 투명하게 만들기
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const [r, g, b, a] = data.slice(i, i + 4); // RGBA 값 가져오기
+
+          // 흰색 픽셀 확인 (RGB 값이 모두 255일 경우)
+          if (r === 255 && g === 255 && b === 255) {
+            data[i + 3] = 0; // 알파값(투명도) 0으로 설정
+          }
+        }
+
+        // 변경된 픽셀 데이터를 Canvas에 다시 적용
+        ctx.putImageData(imageData, 0, 0);
+
+        // Canvas를 Base64로 변환
+        const transparentPngData = canvas.toDataURL();
+
+        const localQRImage = {
+          src: transparentPngData,
+          position: { left: 0, top: 0 },
+          size: { width: 100, height: 100 },
+        };
+
+        console.log(localQRImage.src); // Base64 데이터 확인
+        console.log(localQRImage.position);
+        onDrop(localQRImage.src, localQRImage.position); // 이미지 추가
+      };
+    } catch (error) {
+      console.error('QR 코드 이미지를 PNG로 변환하는 중 오류 발생:', error);
+    }
+  }
+};
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -1114,8 +1261,8 @@ const handleQRImageUpload = (event2) => {
             </button>
             <input 
               id="file-upload" 
-              type="file" 
-              accept=".xls,.xlsx" 
+              type="file"
+              accept=".xls, .xlsx" 
               onChange={handleFileUpload} 
               style={{ display: 'none' }} // 숨김 처리
             />
