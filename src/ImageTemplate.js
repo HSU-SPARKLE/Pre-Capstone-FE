@@ -849,7 +849,7 @@ const renderContent = () => {
               transition: 'background-color 0.3s',
               margin: '10px',
             }}
-            htmlFor="file-upload2"
+            htmlFor="file-upload"
           >
             파일 선택
           </label>
@@ -1243,11 +1243,11 @@ const handleUseGeneratedQR = async () => {
 
             
             <h3 style={{ fontWeight: 'bold' }} >수신자 번호 입력</h3>
-            <button style={styles.button} onClick={() => document.getElementById('file-upload').click()}>
+            <button style={styles.button} onClick={() => document.getElementById('file-upload_address').click()}>
               주소록 업로드
             </button>
             <input 
-              id="file-upload" 
+              id="file-upload_address" 
               type="file"
               accept=".xls, .xlsx" 
               onChange={handleFileUpload} 
