@@ -862,11 +862,6 @@ const renderContent = () => {
           />
         </div>
       );
-
-
-
-      // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
       
     case 'QR 코드':
 
@@ -934,6 +929,7 @@ return (
           <div ref={qrRef} style={{ display: 'inline-block' }}>
             <QRCodeSVG value={generatedQR} size={256} />
           </div>
+          <br/>
           <button
             onClick={handleUseGeneratedQR}
             style={{
@@ -953,9 +949,6 @@ return (
     </div>
   );
 
-
-
-  // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
           
     case '텍스트':
       return (
@@ -1150,8 +1143,6 @@ const handleTextChange = (event) => {
 };
 
 
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
 const handleGenerateQR = () => {
   setGeneratedQR(qrText); // 현재 입력된 텍스트로 QR 코드 생성
 
@@ -1211,10 +1202,6 @@ const handleUseGeneratedQR = async () => {
     }
   }
 };
-
-
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
 
   return (
     <DndProvider backend={HTML5Backend}>
