@@ -15,7 +15,7 @@ import { toPng } from 'html-to-image';
 
 
 
-const REMOVE_BG_KEY = 'iyRFv3t7GPLBtWtfsWS9ksaD'
+const REMOVE_BG_KEY = '71tgBMgbwxE7qpwqkqDmqXPg'
 const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
 
 
@@ -531,7 +531,7 @@ useEffect(() => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [activePage, setActivePage] = useState('로고');
-  const [senderNumber, setSenderNumber] = useState('');
+  const [senderNumber, setSenderNumber] = useState('01099188389');
   const [testSendPhoneNumber, setTestSendPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   // const [message, setMessage] = useState('');

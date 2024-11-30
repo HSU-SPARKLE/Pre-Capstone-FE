@@ -22,7 +22,7 @@ function SendMessage() {
     const [showRegenerateButton, setShowRegenerateButton] = useState(false);
     const [hoveredImageIndex, setHoveredImageIndex] = useState(null);
     const [isLoading, setIsLoading] = useState(false); // 로딩 상태 추가
-    const [advertiseMessage, setAdvertiseMessage] = useState("기본 상태");
+    const [advertiseMessage, setAdvertiseMessage] = useState("우아함을 담은 뷰티 제품들, 립스틱부터 향수까지. 부드러운 꽃들과 함께 고급스러운 분위기를 연출해보세요. 여성스러움이 당신을 더욱 돋보이게 만들어줄 거에요. 지금 바로 만나보세요!");
     const [showInitialMessage, setShowInitialMessage] = useState(true); // 초기 메시지 상태 추가
 
     const openModal = () => setModalIsOpen(true);
@@ -73,7 +73,7 @@ function SendMessage() {
                     return defaultImages; // 이미지 URL이 없으면 기본 이미지 반환
                 }),
                 new Promise((resolve) => {
-                    setTimeout(() => resolve(defaultImages), 60000); // 60초 타임아웃 후 기본 이미지 반환
+                    setTimeout(() => resolve(defaultImages), 90000); // 60초 타임아웃 후 기본 이미지 반환
                 }),
             ]);
 
@@ -107,7 +107,7 @@ function SendMessage() {
                 : [];
 
             setSelectedImages(regeneratedImages);
-            setAdvertiseMessage(response.data.data.advertiseMessage || "기본 메시지를 설정하세요.");
+            setAdvertiseMessage(response.data.data.advertiseMessage || "우아함을 담은 뷰티 제품들, 립스틱부터 향수까지. 부드러운 꽃들과 함께 고급스러운 분위기를 연출해보세요. 여성스러움이 당신을 더욱 돋보이게 만들어줄 거에요. 지금 바로 만나보세요!");
         } catch (error) {
             console.error('이미지 생성 중 오류 발생:', error);
         } finally {
@@ -333,7 +333,7 @@ const styles = {
     },
     generateButton: {
         padding: '10px 20px',
-        backgroundColor: '#007BFF',
+        backgroundColor: '#000000',
         color: '#fff',
         border: 'none',
         borderRadius: '5px',
