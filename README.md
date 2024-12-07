@@ -81,7 +81,7 @@ AI 템플릿 메이커는 생성형 AI와 템플릿 기능을 결합하여 소�
 <img src="https://img.shields.io/badge/remove.bg-API-000000?style=flat-square&logo=remove.bg&logoColor=white" />  
 </p>
 
-### HTML5 <canvas>  
+### HTML5 (canvas)  
 - 생성형 AI를 통해 생성한 이미지 위에 사용자가 추가하고 싶은 이미지를 추가할 수 있도록 구현.
 - 사용자의 로컬 파일 업로드 및 외부 API를 통해 가져온 이미지를 드래그 앤 드롭으로 추가 가능.
 - 사용자의 입력을 기반으로 텍스트를 이미지에 실시간으로 추가.
