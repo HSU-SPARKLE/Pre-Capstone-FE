@@ -14,8 +14,10 @@ import { renderToString } from 'react-dom/server'; // React 컴포넌트를 문�
 import { toPng } from 'html-to-image';
 
 
-
+// remove.bg API 키
 const REMOVE_BG_KEY = 'iyRFv3t7GPLBtWtfsWS9ksaD'
+
+// Unsplash API 키
 const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
 
 
