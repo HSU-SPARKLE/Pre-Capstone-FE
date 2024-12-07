@@ -11,7 +11,7 @@
    cd Pre-Capstone-FE
    ```
    
-2. **Node.js 및 npm 설치**
+3. **Node.js 및 npm 설치**
    이 프로젝트는 Node.js와 npm을 사용합니다. Node.js가 설치되어 있지 않다면, Node.js공식 웹사이트(https://nodejs.org/en) 에서 설치합니다.
 
 4. **의존성 설치**
