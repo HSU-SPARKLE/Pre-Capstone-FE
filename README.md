@@ -62,6 +62,7 @@
    프로젝트 디렉토리에서 다음 명령어를 실행하여 필요한 패키지를 설치합니다.
    ```bash
    npm install
+   npm install qrcode.react html-to-image
    ```
 
 5. **프로젝트 실행**  
