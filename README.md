@@ -3,32 +3,76 @@
 **생성형 AI**를 활용해 이미지를 생성하고, 이를 서비스 내 **템플릿 기능**을 통해 디자인하여 꾸민 뒤 원하는 수신자들에게 이미지 전송이 가능한 기능을 제공합니다.
 
 &nbsp;
+## 프로젝트 실행 방법_백엔드
+1. **`application.yml` 파일 다운로드**  
+   아래 링크에서 `application.yml` 파일을 다운로드합니다.  
+   https://www.notion.so/swagger-12ecfec7eed1800d9ab4e7b8c577dd94  
+   해당 링크에는 IntelliJ에서 실행하는 방법도 추가되어 있으니, 아래의 방법으로 실행되지 않을 경우 참고해주시면 감사하겠습니다.
+
+3. **Git Repository 클론**  
+   프로젝트를 로컬 환경에 복사합니다:
+   ```bash
+   git clone https://github.com/HSU-SPARKLE/Pre-Capstone-BE.git
+   cd Pre-Capstone-BE
+   
+4. **application.yml 파일 추가**  
+   다운로드한 `application.yml` 파일을 아래 경로에 추가합니다  
+   src/main/resources 폴더가 없다면 src/main 밑에 resources 폴더를 생성한 후 application.yml 파일을 추가합니다.  
+   ```
+   src/main/resources/application.yml
+   ```
+
+6. **Gradle Build 실행**  
+   프로젝트 루트 디렉토리(Pre-Capstone-B)에서 아래 명령어를 실행하여 프로젝트를 빌드합니다:
+   ```bash
+   ./gradlew build
+   ```
+
+7. **빌드된 JAR 파일로 이동**  
+   빌드된 파일이 있는 디렉토리로 이동합니다:
+   ```bash
+   cd build/libs
+   ```
+
+8. **애플리케이션 실행**  
+   아래 명령어를 통해 애플리케이션을 실행합니다:
+   ```bash
+   java -jar sparkle-0.0.1-SNAPSHOT.jar
+   ```
+
+9. **애플리케이션 동작 확인**  
+   http://localhost:8080/test 를 실행해 애플리케이션이 실행되는지 확인한 후,  
+   http://localhost:8080/swagger-ui/index.html#/ 를 실행해 swagger에 접속되는지 확인합니다.
+
+
+
+&nbsp;
 ## 프로젝트 실행 방법_프론트엔드
-1. **Git Repository 클론**
+1. **Git Repository 클론**  
    프로젝트를 로컬 환경에 복사합니다:
    ```bash
    git clone https://github.com/HSU-SPARKLE/Pre-Capstone-FE.git
    cd Pre-Capstone-FE
    ```
-   
-3. **Node.js 및 npm 설치**
+
+3. **Node.js 및 npm 설치**  
    이 프로젝트는 Node.js와 npm을 사용합니다. Node.js가 설치되어 있지 않다면, Node.js공식 웹사이트(https://nodejs.org/en) 에서 설치합니다.
 
-4. **의존성 설치**
+4. **의존성 설치**  
    프로젝트 디렉토리에서 다음 명령어를 실행하여 필요한 패키지를 설치합니다.
    ```bash
    npm install
    ```
 
-5. **프로젝트 실행**
+5. **프로젝트 실행**  
    의존성 설치가 완료되면, 다음 명령어로 프로젝트를 실행합니다.
    ```bash
    npm start
    ```
 
-6. **웹 브라우저에서 확인**
+6. **웹 브라우저에서 확인**  
    브라우저를 열고 http://localhost:3000 에 접속하여 프로젝트가 정상적으로 실행되는지 확인합니다.
-
+   
 
 
 &nbsp;
