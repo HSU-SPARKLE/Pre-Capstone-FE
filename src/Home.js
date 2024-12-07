@@ -4,113 +4,97 @@ import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Modal from 'react-modal';
+import backgroundImage from './images/sparkle.jpg'; // 이미지 파일 import
 import './App.css';
 
 Modal.setAppElement('#root');
 
 function Home() {
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [isHovered, setIsHovered] = useState(false); // hover 상태 관리
 
-  const openModal = () => setModalIsOpen(true);
-  const closeModal = () => setModalIsOpen(false);
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
 
-  const handleLogin = () => {
-    console.log('아이디:', username);
-    console.log('비밀번호:', password);
-    closeModal();
+  const handleMouseLeave = () => {
+    setIsHovered(false);
   };
 
   return (
     <div>
-      <Navbar className="custom-navbar">
-        <Container fluid>
-          <Navbar.Brand className='custom-text-black' href="/">SPARKLE</Navbar.Brand>
-          <Nav className="me-auto">
-            {/* <Link to="/send-message">
-              <button style={styles.customButton}>문자 보내기</button>
-            </Link>
-            <Link to="/message-history">
-              <button style={styles.customButton}>문자 내역 보기</button>
-            </Link>
-            <Link to="/address-book-manage">
-              <button style={styles.customButton}>주소록 관리</button>
-            </Link> */}
-          </Nav>
-        </Container>
-      </Navbar>
-
-
-
       <div style={styles.container}>
-      <br />
-      <h1 style={{ fontWeight: 'bold' }}>SPARKLE : </h1>
-      <h2 style={{ fontWeight: 'bold' }}> 이미지 템플릿 기능을 통한 커스텀 이미지 생성 후 발송하기 </h2>
-      <Link to="/send-message">
-        <button style={styles.customButton}>시작하기!</button>
-      </Link>
-      {/* <Link to="/AI-chatbot">
-        <button style={styles.customButton}>AI ChatBot 화면으로 이동</button>
-      </Link>
-      <Link to="/message-history">
-        <button style={styles.customButton}>문자 내역 화면으로 이동</button>
-      </Link>
-      <Link to="/mypage">
-        <button style={styles.customButton}>마이 페이지로 이동</button>
-      </Link> */}
-
-      {/* <button style={styles.customFloatingButton} onClick={openModal}>
-        {'<<'}
-      </button>
-
-      <Modal 
-        isOpen={modalIsOpen} 
-        onRequestClose={closeModal} 
-        className="custom-modal"
-        overlayClassName="Overlay"
-        style={modalStyle}
-      >
-        <button style={styles.customCloseButton} onClick={closeModal}>
-          {'>>'}
-        </button>
-        
-        <h2>로그인</h2>
-        <input
-          type="text"
-          placeholder="아이디"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button style={styles.customLoginButton} onClick={handleLogin}>
-          로그인
-        </button>
-      </Modal> */}
-    </div>
+        <div style={styles.overlay}></div> {/* 오버레이 추가 */}
+        <br />
+        <h1 style={{ fontSize: '70px', fontWeight: 'bold', color: 'white', zIndex: 2, position: 'relative' }}> AI 템플릿 메이커 : </h1>
+        <h2 style={{ fontSize: '50px', fontWeight: 'bold', color: 'white', zIndex: 2, position: 'relative' }}> 이미지 템플릿 기능을 통한 커스텀 이미지 생성 후 발송하기 </h2>
+        <Link to="/send-message">
+          <button 
+            style={isHovered ? styles.customButtonHovered : styles.customButton} 
+            onMouseEnter={handleMouseEnter} 
+            onMouseLeave={handleMouseLeave}
+          >
+            시작하기!
+          </button>
+        </Link>
+        <h3 style={{ fontWeight: '900', fontSize: '20px', marginTop: '450px', marginLeft: '1290px', color: 'white', zIndex: 2, position: 'relative' }}>SW프리캡스톤디자인[8] 4팀 스파클</h3>
+      </div>
     </div>
   );
 }
 
 const styles = {
   container: {
-    padding: '20px',
+    padding: '50px',
     fontFamily: 'Arial, sans-serif',
+    backgroundImage: `url(${backgroundImage})`, // import한 이미지 사용
+    backgroundSize: 'cover', // 배경 이미지 크기 설정
+    backgroundPosition: 'center', // 배경 이미지 위치 설정
+    height: '100vh', // 전체 높이를 화면 높이로 설정
+    position: 'relative', // 오버레이를 위해 position 설정
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 검정색 반투명 오버레이
+    zIndex: 1, // 텍스트보다 뒤에 있도록 설정
   },
   customButton: {
+    width: '300px',
+    height: '150px',
     padding: '10px 20px',
-    backgroundColor: '#007BFF',
+    backgroundColor: 'black',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '40px', // 버튼 모서리 둥글게
     cursor: 'pointer',
-    transition: 'background-color 0.3s',
-    margin: '5px',
+    transition: 'background-color 0.3s, transform 0.3s', // 배경색과 변형 효과 추가
+    marginTop: '30px',
+    fontSize: '50px',
+    fontWeight: '850', // 텍스트 두께를 더 두껍게 설정
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)',
+    position: 'relative', // 버튼을 상대 위치로 설정하여 z-index 적용
+    zIndex: 2, // 버튼을 오버레이 위에 위치하게 설정
+  },
+  customButtonHovered: {
+    width: '300px',
+    height: '150px',
+    padding: '10px 20px',
+    backgroundColor: 'white', // hover 시 배경색 변경
+    color: 'black',
+    border: 'none',
+    borderRadius: '40px', // 버튼 모서리 둥글게
+    cursor: 'pointer',
+    transition: 'background-color 0.3s, transform 0.3s',
+    marginTop: '30px',
+    fontSize: '50px',
+    fontWeight: '850', // hover 시에도 텍스트 두께 유지
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)',
+    position: 'relative',
+    zIndex: 2,
+    transform: 'scale(1.05)', // hover 시 약간 커지도록 설정
   },
   customFloatingButton: {
     position: 'fixed',
@@ -122,7 +106,7 @@ const styles = {
     border: 'none',
     borderRadius: '50%',
     cursor: 'pointer',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    boxShadow: '0 4px 8px rgba(255, 255, 255, 1)',
   },
   customCloseButton: {
     backgroundColor: 'transparent',

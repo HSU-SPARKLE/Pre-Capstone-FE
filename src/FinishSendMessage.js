@@ -123,7 +123,7 @@ const styles = {
   mainContent: {
     flex: 1,
     padding: '20px',
-    marginTop: '60px', // Navbar 높이 만큼 여백 추가
+    marginTop: '80px', // Navbar 높이 만큼 여백 추가
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center', // 가로 중앙 정렬

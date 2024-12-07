@@ -14,10 +14,8 @@ import { renderToString } from 'react-dom/server'; // React 컴포넌트를 문�
 import { toPng } from 'html-to-image';
 
 
-// remove.bg API 키
-const REMOVE_BG_KEY = 'iyRFv3t7GPLBtWtfsWS9ksaD'
 
-// Unsplash API 키
+const REMOVE_BG_KEY = '71tgBMgbwxE7qpwqkqDmqXPg'
 const UNSPLASH_ACCESS_KEY = 'pENSa0wti4szpP4lfl0nqgmq4rwJDEKRr_cfXG0Bkk0';
 
 
@@ -533,7 +531,7 @@ useEffect(() => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [activePage, setActivePage] = useState('로고');
-  const [senderNumber, setSenderNumber] = useState('');
+  const [senderNumber, setSenderNumber] = useState('01099188389');
   const [testSendPhoneNumber, setTestSendPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   // const [message, setMessage] = useState('');
@@ -849,11 +847,11 @@ const renderContent = () => {
               borderRadius: '5px',
               fontSize: '16px',
               transition: 'background-color 0.3s',
-              margin: '10px',
+              marginTop: '10px',
             }}
             htmlFor="file-upload"
           >
-            파일 선택
+            이미지 선택
           </label>
           <input
             id="file-upload"
@@ -882,11 +880,11 @@ return (
           borderRadius: '5px',
           fontSize: '16px',
           transition: 'background-color 0.3s',
-          margin: '10px',
+          marginTop: '10px',
         }}
         htmlFor="file-upload"
       >
-        파일 선택
+        이미지 선택
       </label>
       <input
         id="file-upload"
@@ -927,7 +925,7 @@ return (
 
       {generatedQR && (
         <div style={{ marginTop: '20px' }}>
-          <h3>생성된 QR 코드:</h3>
+          <h3>생성된 QR 코드</h3>
           <div ref={qrRef} style={{ display: 'inline-block' }}>
             <QRCodeSVG value={generatedQR} size={256} />
           </div>

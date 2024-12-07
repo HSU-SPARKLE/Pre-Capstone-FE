@@ -28,6 +28,11 @@
   color: #61dafb;
 }
 
+html, body {
+  overflow: hidden; /* 스크롤 바 숨기기 */
+  height: 100%; /* 전체 높이 설정 */
+}
+
 /* Navbar 커스텀 색상 */
 .custom-navbar {
   background-color: white;
